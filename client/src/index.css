@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #0f172a;
+  color: #f1f1f1;
+  box-sizing: border-box;
+}
+
+.mantine-Skeleton-root::after {
+  background-color: #417bb5 !important;
+}
+
+@layer components {
+  .button {
+    min-width: 100px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    padding: 7px;
+    outline: none;
+    font-size: 15px;
+    font-weight: bold;
+  }
+
+  .input {
+    width: 100%;
+    background-color: #334155;
+    border: 1px solid transparent;
+    font-weight: bold;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 15px;
+    outline: none;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #3b82f6;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(61, 135, 255, 0.847);
+}
