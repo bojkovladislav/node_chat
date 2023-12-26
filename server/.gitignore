@@ -1,0 +1,11 @@
+# IDE
+.idea
+.vscode
+
+.env
+serviceAccountKey.json
+# Node
+node_modules
+
+# MacOS
+.DS_Store
