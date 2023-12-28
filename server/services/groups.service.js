@@ -2,6 +2,7 @@ import ApiError from '../exceptions/api.error.js';
 import CRUD from '../helpers/crudoperations.js';
 import { usersServices } from './users.service.js';
 import { messagesService } from './messages.service.js';
+import admin from 'firebase-admin';
 
 const crudGroups = new CRUD('Groups');
 
@@ -41,10 +42,17 @@ const deleteGroupForEveryone = async (userId, groupId) => {
   return crudGroups.delete(groupId);
 };
 
+const updateMembers = (groupId, userId) => {
+  return crudGroups.update(groupId, {
+    members: admin.firestore.FieldValue.arrayUnion(userId),
+  });
+};
+
 export const groupsService = {
   createGroup,
   getGroups,
   getGroup,
   deleteGroupForEveryone,
   deleteGroupForSelf,
+  updateMembers,
 };

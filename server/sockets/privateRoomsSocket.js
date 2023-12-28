@@ -1,35 +1,38 @@
 import { privateRoomsService } from '../services/private.rooms.service.js';
 import { v4 as uuid } from 'uuid';
 
-function handlePrivateRoomsEvents(socket) {
+function handlePrivateRoomsEvents(socket, io) {
   socket.on('create_private-room', async (currentUser, opponent) => {
     try {
       const newPrivateRoom = {
         id: uuid(),
         name: opponent.name,
+        avatar: opponent.avatar,
+        status: opponent.status,
         creators: [currentUser.id, opponent.id],
       };
 
-      const roomForOpponent = {
-        ...newPrivateRoom,
-        name: currentUser.name,
-      };
+      // const roomForOpponent = {
+      //   ...newPrivateRoom,
+      //   name: currentUser.name,
+      //   avatar: currentUser.avatar,
+      //   status: currentUser.status,
+      // };
 
       socket.emit('send_private-room', newPrivateRoom);
-      socket.emit('send_private-room_for_opponent', roomForOpponent);
 
       const existingRoom = await privateRoomsService.createRoom(
         currentUser.id,
         newPrivateRoom
       );
 
-      const existingRoomForOpponent = await privateRoomsService.createRoom(
-        opponent.id,
-        roomForOpponent
-      );
+      // const existingRoomForOpponent = await privateRoomsService.createRoom(
+      //   opponent.id,
+      //   roomForOpponent
+      // );
 
       socket.emit('private-room_created', newPrivateRoom);
-      socket.emit('private-room_for_opponent_created', roomForOpponent);
+      // socket.emit('private-room_for_opponent_created', roomForOpponent);
 
       if (existingRoom) {
         socket.emit('private-room_existed', existingRoom);
@@ -37,18 +40,20 @@ function handlePrivateRoomsEvents(socket) {
         return;
       }
 
-      if (existingRoomForOpponent) {
-        socket.emit(
-          'private-room_for_opponent_existed',
-          existingRoomForOpponent
-        );
+      // if (existingRoomForOpponent) {
+      //   socket.emit(
+      //     'private-room_for_opponent_existed',
+      //     existingRoomForOpponent
+      //   );
 
-        return;
-      }
+      //   return;
+      // }
     } catch (error) {
       socket.emit('private-room_creation_failed', {
         message: 'Failed to create a private room',
       });
+
+      console.log(error);
     }
   });
 

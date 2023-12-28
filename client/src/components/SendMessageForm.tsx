@@ -12,7 +12,7 @@ interface Props {
   isMessagesLoading: boolean;
   user: User;
   roomId: ID;
-  setMessages: SetState<Messages>;
+  setMessages: SetState<Messages | null>;
 }
 
 const SendMessageForm: FC<Props> = ({
@@ -58,7 +58,7 @@ const SendMessageForm: FC<Props> = ({
 
     if (message === "") return;
 
-    socket.emit("create_message", roomId, user.name, message, getDate());
+    socket.emit("create_message", roomId, user.name, user.avatar, message, getDate());
 
     setMessage("");
   };
@@ -77,7 +77,9 @@ const SendMessageForm: FC<Props> = ({
     socket.on("send_message", (message: any) => {
       console.log("it happened!"), handleSetMessage(message);
     });
-    socket.on("message_created", () => setSentMessageId(null));
+    socket.on("message_created", () => {
+      setSentMessageId(null);
+    });
   }, []);
 
   return (

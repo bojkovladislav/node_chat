@@ -1,12 +1,14 @@
-import { ID } from './PublicTypes';
+import { ID, USER_STATUS } from './PublicTypes';
 
 export type PrivateRoom = {
   id: ID;
+  avatar: string;
+  status: USER_STATUS;
   name: string;
   creators: ID[];
 };
 
-export type Group = PrivateRoom & {
+export type Group = Omit<PrivateRoom, 'status'> & {
   members: ID[];
   public: boolean;
 };

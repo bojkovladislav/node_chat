@@ -64,7 +64,7 @@ const Search: FC<Props> = ({
   }, [query]);
 
   return (
-    <div className="flex items-center gap-3 rounded-md border-transparent bg-slate-600 pl-2">
+    <div className="flex items-center gap-3 rounded-md border-transparent bg-slate-600 pl-2 ">
       <SearchIcon />
       <input
         type="text"

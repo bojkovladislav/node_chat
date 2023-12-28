@@ -29,7 +29,7 @@ const Auth: FC<Props> = ({ createUser }) => {
 
   return (
     <form
-      className="flex gap-10 rounded-md border-2 p-10"
+      className="flex flex-col gap-5 rounded-md border-2 p-5 md:flex-row md:gap-10 md:p-10"
       onSubmit={handleSubmit}
     >
       <div className="relative">

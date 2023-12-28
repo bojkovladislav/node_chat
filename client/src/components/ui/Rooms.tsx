@@ -1,20 +1,26 @@
 import { FC, MouseEvent } from "react";
-import { RoomType, Group as GroupType, RoomsType } from "../../../types/Rooms";
+import {
+  RoomType,
+  Group as GroupType,
+  RoomsType,
+  PrivateRoom as PrivateRoomType,
+} from "../../../types/Rooms";
 import Group from "../Group";
 import { RoomWrapper } from "./RoomWrapper";
-import PrivateRoom from "../PrivateRoom";
 import { ID } from "../../../types/PublicTypes";
+import { User } from "../../../types/Users";
+import PrivateRoom from "../PrivateRoom";
 
 interface Props {
   rooms: RoomsType;
-  handleRoomEnter: (currentRoom: RoomType) => void;
+  handleRoomEnter: (currentRoom: any) => void | Promise<void>;
   handleRoomDelete: (
     roomType: "group" | "private-room",
     e: MouseEvent,
     id: ID,
   ) => void;
   roomId?: ID;
-  userId: ID;
+  user: User;
   addedRoomId: ID | null;
   isRoomsLoading: boolean;
 }
@@ -24,14 +30,14 @@ const Rooms: FC<Props> = ({
   handleRoomEnter,
   handleRoomDelete,
   roomId,
-  userId,
+  user,
   addedRoomId,
   isRoomsLoading,
 }) => {
   return (
-    <div className="flex w-96 flex-col gap-0">
+    <div className="flex w-screen flex-col gap-0 md:w-96">
       {rooms.map((currentRoom: RoomType) => {
-        const { id, name, creators } = currentRoom;
+        const { id, name, creators, avatar } = currentRoom;
 
         return (currentRoom as GroupType).members !== undefined ? (
           <RoomWrapper
@@ -41,10 +47,11 @@ const Rooms: FC<Props> = ({
             active={roomId === currentRoom.id}
             currentRoom={currentRoom}
             deleteRoomCondition={addedRoomId !== currentRoom.id}
-            showDeleteButton={creators.includes(userId)}
+            showDeleteButton={creators.includes(user.id)}
             isRoomsLoading={isRoomsLoading}
           >
             <Group
+              avatar={avatar}
               loading={addedRoomId === currentRoom.id}
               name={name}
               isRoomsLoading={isRoomsLoading}
@@ -58,11 +65,11 @@ const Rooms: FC<Props> = ({
             active={roomId === currentRoom.id}
             currentRoom={currentRoom}
             deleteRoomCondition={addedRoomId !== currentRoom.id}
-            showDeleteButton={creators.includes(userId)}
+            showDeleteButton={creators.includes(user.id)}
             isRoomsLoading={isRoomsLoading}
           >
             <PrivateRoom
-              name={name}
+              currentRoom={currentRoom as PrivateRoomType}
               loading={addedRoomId === currentRoom.id}
               isRoomsLoading={isRoomsLoading}
             />

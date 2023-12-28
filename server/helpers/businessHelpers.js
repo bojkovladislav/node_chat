@@ -18,3 +18,9 @@ export function checkDefaultParams(params) {
     );
   }
 }
+
+export const handleGetRandomColor = (colors) => {
+  const randomIndex = Math.floor(Math.random() * colors.length);
+
+  return colors[randomIndex];
+};

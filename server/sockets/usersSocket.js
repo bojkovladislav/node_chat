@@ -1,13 +1,17 @@
 import { usersServices } from '../services/users.service.js';
 import { v4 as uuid } from 'uuid';
+import { handleGetRandomColor } from '../helpers/businessHelpers.js';
+import { userColors } from '../utility/constans.js';
 
-function handleUserEvents(socket) {
+function handleUserEvents(socket, userSocketMap) {
   socket.on('create_user', async (name) => {
     try {
       const existingUser = await usersServices.getUserByName(name);
 
       if (existingUser) {
         socket.emit('user_exists', existingUser);
+
+        console.log('Map in usersSocket (existing user):', userSocketMap);
 
         return;
       }
@@ -16,7 +20,7 @@ function handleUserEvents(socket) {
         id: uuid(),
         name,
         rooms: [],
-        avatar: 'default',
+        avatar: handleGetRandomColor(userColors),
         status: 'online',
       };
 
@@ -44,7 +48,21 @@ function handleUserEvents(socket) {
     try {
       await usersServices.addNewRoomId(id, roomId);
     } catch (error) {
-      socket.emit('failed_update_user_roomIds', 'Failed to update user!');
+      socket.emit(
+        'failed_update_user_roomIds',
+        'Failed to update user roomIds!'
+      );
+    }
+  });
+
+  socket.on('user_update_field', async (id, field, newValue) => {
+    try {
+      await usersServices.update(id, field, newValue);
+    } catch (error) {
+      socket.emit(
+        'failed_update_user_field',
+        `Failed to update user ${field}!`
+      );
     }
   });
 }

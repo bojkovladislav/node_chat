@@ -1,21 +1,26 @@
 import { Skeleton } from "@mantine/core";
 import { FC } from "react";
-import { Robot } from "react-bootstrap-icons";
+import Avatar from "./ui/Avatar";
+import { PrivateRoom as PrivateRoomType } from "../../types/Rooms";
 
 interface Props {
-  name: string;
+  currentRoom: PrivateRoomType;
   isRoomsLoading: boolean;
   loading: boolean;
 }
 
-const PrivateRoom: FC<Props> = ({ name, isRoomsLoading, loading }) => {
+const PrivateRoom: FC<Props> = ({ currentRoom, isRoomsLoading, loading }) => {
   return (
     <Skeleton
       visible={isRoomsLoading}
       className="flex w-fit items-center gap-2"
     >
-      <Robot />
-      <p>{loading ? "Creating a room..." : name}</p>
+      <Avatar
+        userName={currentRoom.name}
+        avatar={currentRoom.avatar}
+        status={currentRoom.status}
+      />
+      <p>{loading ? "Creating a room..." : currentRoom.name}</p>
     </Skeleton>
   );
 };

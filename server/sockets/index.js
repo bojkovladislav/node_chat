@@ -10,7 +10,7 @@ export function initializeWebSocket(io) {
     roomsSocket.handleRoomsEvent(socket);
     groupsSocket.handleGroupsEvent(socket);
     messagesSocket.messagesEventHandler(socket);
-    privateRoomsSocket.handlePrivateRoomsEvents(socket);
+    privateRoomsSocket.handlePrivateRoomsEvents(socket, io);
 
     socket.on('join_room', (id) => {
       socket.join(id);

@@ -10,6 +10,7 @@ import LeftBar from "./components/LeftBar.tsx";
 import { RoomType, RoomsType } from "../types/Rooms.ts";
 import { User } from "../types/Users.ts";
 import { socket } from "./socket.ts";
+import { useMediaQuery } from "@mantine/hooks";
 import { Messages } from "../types/Messages.ts";
 import useSocketCleanup from "./hooks/useSocketCleanup.ts";
 import { BoxArrowRight } from "react-bootstrap-icons";
@@ -18,7 +19,8 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [rooms, setRooms] = useState<RoomsType>([]);
   const [room, setRoom] = useState<RoomType | null>(null);
-  const [messages, setMessages] = useState<Messages>(null);
+  const [messages, setMessages] = useState<Messages | null>(null);
+  const matches = useMediaQuery("(max-width: 765px)");
   useSocketCleanup([
     "create_user",
     "user_created",
@@ -83,7 +85,7 @@ function App() {
 
   useEffect(() => {
     if (userFromLS) updateUser();
-  }, []);
+  }, [room]);
 
   useEffect(() => {
     loadMessages();
@@ -93,7 +95,7 @@ function App() {
     <div
       className={`flex ${
         !user && "items-center justify-center"
-      } h-screen flex-col`}
+      } h-screen flex-col md:h-[600px]`}
     >
       {!userFromLS ? (
         <Auth createUser={createUser} />
@@ -101,33 +103,59 @@ function App() {
         <>
           {user ? (
             <>
-              <header className="flex items-center justify-between border-b-2 border-slate-600 bg-slate-800 px-52 py-10">
+              <header
+                className={`flex items-center justify-between border-b-2 border-slate-600 bg-slate-800 p-5 md:px-52 md:py-10 ${
+                  matches && room ? "hidden" : "block"
+                }`}
+              >
                 <h1 className="text-xl font-bold">Chat App</h1>
                 <BoxArrowRight
                   onClick={handleLogOut}
                   className="cursor-pointer text-xl"
                 />
               </header>
-
-              <main className={`flex h-screen flex-col ${user && "px-52"}`}>
-                <div className="flex h-4/5 rounded-md rounded-tl-none rounded-tr-none border-b-2 border-l-2 border-r-2 border-slate-600">
-                  <LeftBar
-                    user={user}
-                    setRooms={setRooms}
-                    setIsMessagesLoading={setIsMessagesLoading}
-                    rooms={rooms}
-                    room={room}
-                    setRoom={setRoom}
-                  />
-
-                  <Chat
-                    user={user}
-                    messages={messages}
-                    isMessagesLoading={isMessagesLoading}
-                    setMessages={setMessages}
-                    room={room}
-                    setRoom={setRoom}
-                  />
+              <main className={`flex h-full flex-col ${user && "md:px-52"}`}>
+                <div className="flex h-full md:rounded-md md:rounded-tl-none md:rounded-tr-none md:border-b-2 md:border-l-2 md:border-r-2 md:border-slate-600">
+                  {matches ? (
+                    !room ? (
+                      <LeftBar
+                        user={user}
+                        setRooms={setRooms}
+                        setIsMessagesLoading={setIsMessagesLoading}
+                        rooms={rooms}
+                        room={room}
+                        setRoom={setRoom}
+                      />
+                    ) : (
+                      <Chat
+                        user={user}
+                        messages={messages}
+                        isMessagesLoading={isMessagesLoading}
+                        setMessages={setMessages}
+                        room={room}
+                        setRoom={setRoom}
+                      />
+                    )
+                  ) : (
+                    <>
+                      <LeftBar
+                        user={user}
+                        setRooms={setRooms}
+                        setIsMessagesLoading={setIsMessagesLoading}
+                        rooms={rooms}
+                        room={room}
+                        setRoom={setRoom}
+                      />
+                      <Chat
+                        user={user}
+                        messages={messages}
+                        isMessagesLoading={isMessagesLoading}
+                        setMessages={setMessages}
+                        room={room}
+                        setRoom={setRoom}
+                      />
+                    </>
+                  )}
                 </div>
               </main>
             </>
@@ -141,10 +169,10 @@ function App() {
 }
 
 // TODO:
-// style somehow different user private room as well as group
-// when user enters a room - add him to members
-// check how it works for opponent
-// add for each opponent message avatar standing with message itself
+// Check how it works for opponent:
+//  - First of all, I need to add socket id to user credentials
+//  - Then I need to access that socket id in privateRoomsSocket and send that private room to recipient
+//  - That's it
 
 //? FEATURES:
 // 2) add responsiveness to that rooms block

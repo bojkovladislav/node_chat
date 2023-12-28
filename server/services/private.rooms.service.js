@@ -42,7 +42,13 @@ const getFilteredRooms = async (currentUserName, userName) => {
 
   return filteredUsers
     .filter((user) => user.name !== currentUserName)
-    .map(({ name, id }) => ({ name, id, creators: [id] }));
+    .map(({ name, id, avatar, status }) => ({
+      name,
+      id,
+      creators: [id],
+      avatar,
+      status,
+    }));
 };
 
 const deleteRoomForSelf = async (userId, roomId) => {

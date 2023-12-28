@@ -44,6 +44,10 @@ const getFilteredUsers = (name) => {
   return usersCrud.getByName(name);
 };
 
+const update = (id, field, newValue) => {
+  return usersCrud.update({ id, [field]: newValue });
+};
+
 export const usersServices = {
   createUser,
   getUsers,
@@ -52,4 +56,5 @@ export const usersServices = {
   addNewRoomId,
   removeRoomId,
   getFilteredUsers,
+  update,
 };

@@ -3,7 +3,7 @@ import { PrivateRooms, RoomsType } from "../types/Rooms";
 import { ID } from "../types/PublicTypes";
 import { getItemFromLS } from "./helpers/localStorageHelpers";
 
-const BASE_URL = "http://localhost:3001";
+const BASE_URL = "http://localhost:5000";
 
 const currentUser = getItemFromLS("user");
 

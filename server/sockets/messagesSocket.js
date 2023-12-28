@@ -20,24 +20,25 @@ function messagesEventHandler(socket) {
     }
   });
 
-  socket.on('create_message', async (roomId, author, content, date) => {
+  socket.on('create_message', async (roomId, author, avatar, content, date) => {
     try {
       const newMessage = {
         id: uuid(),
         author,
+        avatar,
         content,
         date,
       };
 
-      socket.to(roomId).emit('receive_message', roomId, newMessage);
       socket.emit('send_message', newMessage);
 
       await messagesService.createMessage(roomId, newMessage);
 
-      socket.emit('message_created', 'Message has been successfully created!');
+      socket.emit('message_created', newMessage);
+      socket.to(roomId).emit('receive_message', roomId, newMessage);
     } catch (error) {
       socket.emit('failed_create_message', 'Failed to create message!');
-    }
+    } 
   });
 }
 

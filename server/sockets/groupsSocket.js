@@ -1,5 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import { groupsService } from '../services/groups.service.js';
+import { handleGetRandomColor } from '../helpers/businessHelpers.js';
+import { groupColors } from '../utility/constans.js';
 
 function handleGroupsEvent(socket) {
   socket.on(
@@ -9,6 +11,7 @@ function handleGroupsEvent(socket) {
         const newGroup = {
           id: uuid(),
           name,
+          avatar: handleGetRandomColor(groupColors),
           creators,
           members,
           isPublic,
@@ -23,6 +26,8 @@ function handleGroupsEvent(socket) {
         socket.emit('group_creation_failed', {
           message: 'Failed to create group! Please try again later!',
         });
+
+        console.log(error);
       }
     }
   );
@@ -54,6 +59,16 @@ function handleGroupsEvent(socket) {
         'failed_delete_group',
         'Failed to delete group! Try again later!'
       );
+    }
+  });
+
+  socket.on('update_group_members', async (groupId, userId) => {
+    try {
+      await groupsService.updateMembers(groupId, userId);
+    } catch (error) {
+      console.log(error);
+
+      socket.emit('failed_update_members', 'Failed to update group members!');
     }
   });
 }

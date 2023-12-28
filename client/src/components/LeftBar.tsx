@@ -15,8 +15,9 @@ import {
   RoomsType,
   PrivateRooms,
   PrivateRoom,
+  Group,
 } from "../../types/Rooms";
-import { ID, SetState } from "../../types/PublicTypes";
+import { ID, SetState, USER_STATUS } from "../../types/PublicTypes";
 import useSocketCleanup from "../hooks/useSocketCleanup";
 import AddNewChat from "./ui/AddNewChat";
 import Search from "./Search";
@@ -27,7 +28,7 @@ interface Props {
   rooms: RoomsType;
   setRooms: SetState<RoomsType>;
   room: RoomType | null;
-  setRoom: (room: RoomType | null) => void;
+  setRoom: SetState<RoomType | null>;
   setIsMessagesLoading: SetState<boolean>;
   user: User;
 }
@@ -61,6 +62,8 @@ const LeftBar: FC<Props> = ({
     // groups
     "create_group",
     "group_created",
+    "update_group_members",
+    "failed_update_members",
     "send_group",
     "group_creation_failed",
     "delete_group",
@@ -70,6 +73,7 @@ const LeftBar: FC<Props> = ({
     "create_private-room",
     "private-room_created",
     "send_private-room",
+    "send_private-room_for_opponent",
     "private-room_for_opponent_created",
     "private-room_creation_failed",
     "private-room_existed",
@@ -113,8 +117,6 @@ const LeftBar: FC<Props> = ({
 
       if (deletedUser) deletedUser.creators = [];
 
-      setFilteredUsers((prevUsers) => [...(prevUsers as any), deletedUser]);
-
       setFilteredChats(filteredChats.filter((chat) => chat.id !== id));
     }
 
@@ -125,7 +127,7 @@ const LeftBar: FC<Props> = ({
     socket.on(`failed_delete_${roomType}`, console.log);
   };
 
-  const handleRoomAdd = (e: FormEvent, name: string, isPublic: boolean) => {
+  const handleGroupAdd = (e: FormEvent, name: string, isPublic: boolean) => {
     e.preventDefault();
 
     if (!name.length) {
@@ -167,14 +169,31 @@ const LeftBar: FC<Props> = ({
   const handleRoomEnter = (currentRoom: RoomType) => {
     if (currentRoom.id === room?.id) return;
 
+    let roomToUpdate = currentRoom;
+
     if (rooms.every((room) => room.id !== currentRoom.id)) {
       setRooms((prevRooms) => [...prevRooms, currentRoom]);
 
       socket.emit("user_update_roomIds", user.id, currentRoom.id);
     }
 
+    if (
+      (currentRoom as Group).members &&
+      !(currentRoom as Group).members.includes(user.id)
+    ) {
+      const newRoom = {
+        ...currentRoom,
+        members: [...(currentRoom as Group).members, user.id],
+      };
+
+      roomToUpdate = newRoom;
+
+      socket.emit("update_group_members", currentRoom.id, user.id);
+      socket.on("failed_update_members", console.log);
+    }
+
     setIsMessagesLoading(true);
-    setRoom(currentRoom);
+    setRoom(roomToUpdate);
     joinRoom(currentRoom.id);
   };
 
@@ -221,7 +240,7 @@ const LeftBar: FC<Props> = ({
           }
           addedRoomId={addedRoomId}
           roomId={room?.id}
-          userId={user.id}
+          user={user}
           isRoomsLoading={isRoomsLoading}
         />
       ) : (
@@ -246,11 +265,16 @@ const LeftBar: FC<Props> = ({
     socket.on("send_private-room", (room) => {
       handleAddPrivateRoomLocally(room);
     });
+    socket.on("send_private-room_for_opponent", (roomForOpponent) => {
+      handleAddPrivateRoomLocally(roomForOpponent);
+
+      console.log("triggered!", roomForOpponent);
+    });
 
     // creating a room
     socket.on("group_created", handleEndRoomCreation);
     socket.on("private-room_created", handleEndRoomCreation);
-    // socket.on("private-room_for_opponent_created", handleAddRoomLocally);
+    // socket.on("private-room_for_opponent_created", handleEndRoomCreation);
   }, []);
 
   const skeletonRooms: RoomsType = useMemo(() => {
@@ -260,6 +284,8 @@ const LeftBar: FC<Props> = ({
             id: uuid() as ID,
             name: "Fake name",
             creators: [user.id],
+            avatar: "",
+            status: USER_STATUS.OFFLINE,
           };
         })
       : rooms;
@@ -267,7 +293,7 @@ const LeftBar: FC<Props> = ({
 
   return (
     <div
-      className={`flex min-w-fit flex-col gap-5 overflow-y-auto overflow-x-hidden pb-3 pt-3`}
+      className={`flex w-fit flex-col gap-5 overflow-y-auto overflow-x-hidden pb-3 pt-3 md:min-w-fit`}
     >
       <div className="mx-5 flex flex-col gap-7">
         <Search
@@ -282,7 +308,7 @@ const LeftBar: FC<Props> = ({
         {!query.length && (
           <AddNewChat
             handleOpenRoomCreation={handleOpenRoomCreation}
-            handleRoomAdd={handleRoomAdd}
+            handleRoomAdd={handleGroupAdd}
             isCreateNewChatTriggered={isCreateNewChatTriggered}
             isPublic={isPublic}
             roomName={roomName}
@@ -295,7 +321,7 @@ const LeftBar: FC<Props> = ({
         )}
       </div>
       {!!query.length ? (
-        <div className="flex w-96 flex-col gap-3">
+        <div className="flex w-screen flex-col gap-3 md:w-96">
           {["chats", "users"].map((roomType, i) => (
             <div key={i} className="flex flex-col gap-1">
               <h1 className="ml-5 text-lg">
@@ -319,7 +345,7 @@ const LeftBar: FC<Props> = ({
           handleRoomEnter={handleRoomEnter}
           addedRoomId={addedRoomId}
           roomId={room?.id}
-          userId={user.id}
+          user={user}
           isRoomsLoading={isRoomsLoading}
         />
       )}

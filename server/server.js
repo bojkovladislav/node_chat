@@ -27,4 +27,4 @@ app.use(errorMiddleware);
 
 initializeWebSocket(io);
 
-server.listen(3001, console.log('Your server runs on http://localhost:3001'));
+server.listen(5000, console.log('Your server runs on http://localhost:3001'));
