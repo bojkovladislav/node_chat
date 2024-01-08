@@ -93,9 +93,9 @@ function App() {
 
   return (
     <div
-      className={`flex ${
+      className={`flex md:pb-10 ${
         !user && "items-center justify-center"
-      } h-screen flex-col md:h-[600px]`}
+      } h-screen flex-col`}
     >
       {!userFromLS ? (
         <Auth createUser={createUser} />
@@ -114,7 +114,11 @@ function App() {
                   className="cursor-pointer text-xl"
                 />
               </header>
-              <main className={`flex h-full flex-col ${user && "md:px-52"}`}>
+              <main
+                className={`flex h-full flex-col ${
+                  user && "md:min-h-[500px] md:px-52"
+                }`}
+              >
                 <div className="flex h-full md:rounded-md md:rounded-tl-none md:rounded-tr-none md:border-b-2 md:border-l-2 md:border-r-2 md:border-slate-600">
                   {matches ? (
                     !room ? (
@@ -175,7 +179,8 @@ function App() {
 //  - That's it
 
 //? FEATURES:
-// 2) add responsiveness to that rooms block
-// 3) add settings to groups
+// Add responsiveness to that rooms block
+// Add settings to groups
+// Add the possibility to attach a file to a message.
 
 export default App;

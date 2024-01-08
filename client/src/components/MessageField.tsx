@@ -17,6 +17,7 @@ interface Props {
   isMessagesLoading: boolean;
   setMessages: SetState<Messages | null>;
   room: RoomType;
+  setNewMessageFromOpponentId: SetState<null | ID>;
 }
 
 const MessageField: FC<Props> = ({
@@ -24,12 +25,15 @@ const MessageField: FC<Props> = ({
   messages,
   setMessages,
   isMessagesLoading,
+  setNewMessageFromOpponentId,
   sentMessageId,
   room,
 }) => {
   const handleReceiveMessage = (roomId: ID, newMessage: MessageType) => {
     setMessages((prevMessages) => {
       if (!prevMessages || prevMessages.roomId !== roomId) return prevMessages;
+
+      setNewMessageFromOpponentId(newMessage.id);
 
       return {
         ...prevMessages,
@@ -49,7 +53,7 @@ const MessageField: FC<Props> = ({
   const messagesData: MessageType[] = useMemo(
     () =>
       isMessagesLoading
-        ? (Array.from({ length: 6 }).map((_, i) => {
+        ? (Array.from({ length: 5 }).map((_, i) => {
             return {
               id: uuid(),
               author: i % 2 !== 0 ? "Friend" : user.name,

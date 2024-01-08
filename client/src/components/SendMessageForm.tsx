@@ -58,7 +58,14 @@ const SendMessageForm: FC<Props> = ({
 
     if (message === "") return;
 
-    socket.emit("create_message", roomId, user.name, user.avatar, message, getDate());
+    socket.emit(
+      "create_message",
+      roomId,
+      user.name,
+      user.avatar,
+      message,
+      getDate(),
+    );
 
     setMessage("");
   };
@@ -84,7 +91,7 @@ const SendMessageForm: FC<Props> = ({
 
   return (
     <form
-      className="sticky bottom-0 flex w-full items-center gap-5 border-t border-slate-600 bg-slate-900 px-5 py-3"
+      className="flex w-full items-center gap-5 border-t border-slate-600 bg-slate-900 px-5 py-3"
       onSubmit={handleSendMessage}
     >
       <EmojiSmile

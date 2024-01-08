@@ -1,4 +1,4 @@
-import { FC, useLayoutEffect, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import MessageField from "./MessageField";
 import SendMessageForm from "./SendMessageForm";
 import { useMediaQuery } from "@mantine/hooks";
@@ -7,6 +7,8 @@ import { Messages } from "../../types/Messages";
 import { ID, SetState } from "../../types/PublicTypes";
 import { Group, RoomType } from "../../types/Rooms";
 import { ArrowLeft } from "react-bootstrap-icons";
+import NewMessageNotification from "./ui/NewMessageNotification";
+import ScrollToBottomArrow from "./ui/ScrollToBottomArrow";
 
 interface Props {
   messages: Messages | null;
@@ -25,25 +27,69 @@ const Chat: FC<Props> = ({
   setRoom,
   isMessagesLoading,
 }) => {
-  const chatWindowRef = useRef<null | HTMLDivElement>(null);
+  const chatWindowRef = useRef<any>(null);
   const [sentMessageId, setSentMessageId] = useState<ID | null>(null);
   const matches = useMediaQuery("(max-width: 765px)");
+  const [newMessageFromOpponentId, setNewMessageFromOpponentId] =
+    useState<ID | null>(null);
+  const [isNewMessagesVisible, setIsNewMessagesVisible] = useState(false);
+  const [isUserScrollingUp, setIsUserScrollingUp] = useState(false);
 
-  useLayoutEffect(() => {
-    if (chatWindowRef.current) {
-      chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
+  const isUserNearBottom = useRef<boolean>(false);
+
+  const scrollChatToBottom = (smooth: boolean = false) => {
+    if (chatWindowRef.current && !isMessagesLoading) {
+      const chatWindow = chatWindowRef.current;
+
+      chatWindow.scrollTo({
+        top: chatWindow.scrollHeight,
+        behavior: smooth ? "smooth" : "auto",
+      });
+
+      setNewMessageFromOpponentId(null);
     }
-  }, [messages]);
+  };
+
+  const handleScroll = () => {
+    if (chatWindowRef.current) {
+      const chatWindow = chatWindowRef.current;
+      const threshold = 5;
+      const isBottomNearViewportBottom =
+        chatWindow.scrollTop + chatWindow.clientHeight >=
+        chatWindow.scrollHeight - threshold;
+
+      isUserNearBottom.current = isBottomNearViewportBottom;
+
+      if (isBottomNearViewportBottom) {
+        setIsNewMessagesVisible(false);
+        setIsUserScrollingUp(false);
+      } else {
+        setIsUserScrollingUp(true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    scrollChatToBottom();
+  }, [isMessagesLoading, sentMessageId]);
+
+  useEffect(() => {
+    if (newMessageFromOpponentId) {
+      isUserNearBottom.current
+        ? scrollChatToBottom(true)
+        : setIsNewMessagesVisible(true);
+    }
+  }, [newMessageFromOpponentId, isUserNearBottom]);
 
   return (
     <div
-      className={`relative h-full w-full ${
+      className={`relative flex h-full w-full flex-col ${
         !room && "flex items-center justify-center"
       } overflow-y-hidden border-slate-700 md:border-l-2`}
     >
       {room ? (
         <>
-          <div className="sticky top-0 flex items-center gap-3 border-b-2 border-slate-700 bg-slate-900 p-3">
+          <div className="flex items-center gap-3 border-b-2 border-slate-700 bg-slate-900 p-3">
             {/* header of the chat */}
             {matches && <ArrowLeft onClick={() => setRoom(null)} />}
             <div className="flex-column gap-5">
@@ -60,14 +106,17 @@ const Chat: FC<Props> = ({
           {/* message field */}
           <div
             ref={chatWindowRef}
-            className={`h-full flex-1 overflow-y-auto overflow-x-hidden ${
+            className={`${
+              isMessagesLoading && "overflow-y-hidden"
+            } flex-1 overflow-x-hidden ${
               !room && "flex items-center justify-center"
             }`}
-            style={{ height: "calc(100% - 49.6px - 52.8px)" }}
+            onScroll={handleScroll}
           >
             <MessageField
               sentMessageId={sentMessageId}
               user={user}
+              setNewMessageFromOpponentId={setNewMessageFromOpponentId}
               isMessagesLoading={isMessagesLoading}
               messages={messages}
               setMessages={setMessages}
@@ -86,6 +135,16 @@ const Chat: FC<Props> = ({
       ) : (
         <h1>Please, select a room to start messaging</h1>
       )}
+
+      <NewMessageNotification
+        isNewMessagesVisible={isNewMessagesVisible}
+        scrollChatToBottom={scrollChatToBottom}
+      />
+
+      <ScrollToBottomArrow
+        isUserScrollingUp={isUserScrollingUp}
+        scrollChatToBottom={scrollChatToBottom}
+      />
     </div>
   );
 };
