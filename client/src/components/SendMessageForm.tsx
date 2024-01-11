@@ -58,14 +58,7 @@ const SendMessageForm: FC<Props> = ({
 
     if (message === "") return;
 
-    socket.emit(
-      "create_message",
-      roomId,
-      user.name,
-      user.avatar,
-      message,
-      getDate(),
-    );
+    socket.emit("create_message", roomId, user, message, getDate());
 
     setMessage("");
   };
@@ -101,7 +94,7 @@ const SendMessageForm: FC<Props> = ({
         onClick={() => setIsEmojiClicked(!isEmojiClicked)}
       />
       {isEmojiClicked && (
-        <div className="absolute bottom-full">
+        <div className="absolute bottom-16">
           <EmojiPicker
             theme={Theme.DARK}
             onEmojiClick={(emoji) =>

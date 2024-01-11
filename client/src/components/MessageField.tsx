@@ -3,7 +3,6 @@ import { Message as MessageType, Messages } from "../../types/Messages";
 import { User } from "../../types/Users";
 import { socket } from "../socket";
 import { ID, SetState } from "../../types/PublicTypes";
-import useSocketCleanup from "../hooks/useSocketCleanup";
 import { v4 as uuid } from "uuid";
 import { generateRandomLoremParagraph } from "../helpers/globalHelpers";
 import { RoomType } from "../../types/Rooms";
@@ -42,12 +41,18 @@ const MessageField: FC<Props> = ({
     });
   };
 
-  useSocketCleanup([
-    "receive_message, get_messages, messages_got, message_created",
-  ]);
-
   useEffect(() => {
-    socket.on("receive_message", handleReceiveMessage);
+    socket.on("receive_message", (roomId, newMessage) => {
+      console.log("this log is inside socket");
+      handleReceiveMessage(roomId, newMessage);
+    });
+
+    return () => {
+      socket.off("receive_message");
+      socket.off("get_messages");
+      socket.off("messages_got");
+      socket.off("message_created");
+    };
   }, []);
 
   const messagesData: MessageType[] = useMemo(
@@ -56,7 +61,8 @@ const MessageField: FC<Props> = ({
         ? (Array.from({ length: 5 }).map((_, i) => {
             return {
               id: uuid(),
-              author: i % 2 !== 0 ? "Friend" : user.name,
+              authorName: i % 2 !== 0 ? "Friend" : user.name,
+              authorId: i % 2 !== 0 ? "123-123-123-123-123" : user.id,
               content: generateRandomLoremParagraph(),
               date: "13:37",
               avatar: "",
@@ -78,7 +84,7 @@ const MessageField: FC<Props> = ({
             index={index}
             isMessagesLoading={isMessagesLoading}
             sentMessageId={sentMessageId}
-            userName={user.name}
+            userId={user.id}
           />
         ))}
     </div>

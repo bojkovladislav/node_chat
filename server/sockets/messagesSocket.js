@@ -20,12 +20,13 @@ function messagesEventHandler(socket) {
     }
   });
 
-  socket.on('create_message', async (roomId, author, avatar, content, date) => {
+  socket.on('create_message', async (roomId, author, content, date) => {
     try {
       const newMessage = {
         id: uuid(),
-        author,
-        avatar,
+        authorName: author.name,
+        authorId: author.id,
+        avatar: author.avatar,
         content,
         date,
       };

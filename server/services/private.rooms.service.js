@@ -14,7 +14,7 @@ const createRoom = async (userId, newRoom) => {
 
   await Promise.all([
     usersServices.addNewRoomId(userId, newRoom.id),
-    messagesService.createMessages(newRoom.id),
+    messagesService.createMessages(newRoom.commonId),
     crudPrivateRooms.create(newRoom, newRoom.id),
   ]);
 

@@ -18,6 +18,7 @@ function handleUserEvents(socket, userSocketMap) {
 
       const newUser = {
         id: uuid(),
+        socketId: socket.id,
         name,
         rooms: [],
         avatar: handleGetRandomColor(userColors),
@@ -36,6 +37,8 @@ function handleUserEvents(socket, userSocketMap) {
 
   socket.on('get_user', async (id) => {
     try {
+      await usersServices.update(id, 'socketId', socket.id);
+
       const user = await usersServices.getUserById(id);
 
       socket.emit('user_got', user);

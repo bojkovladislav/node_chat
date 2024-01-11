@@ -151,7 +151,7 @@ const LeftBar: FC<Props> = ({
     setInputError("");
   };
 
-  const joinRoom = (id: ID) => {
+  const joinRoom = (id: ID | string) => {
     if (!id) return;
 
     socket.emit("join_room", id);
@@ -169,6 +169,7 @@ const LeftBar: FC<Props> = ({
   const handleRoomEnter = (currentRoom: RoomType) => {
     if (currentRoom.id === room?.id) return;
 
+    const isGroup = !!(currentRoom as Group).members;
     let roomToUpdate = currentRoom;
 
     if (rooms.every((room) => room.id !== currentRoom.id)) {
@@ -177,10 +178,7 @@ const LeftBar: FC<Props> = ({
       socket.emit("user_update_roomIds", user.id, currentRoom.id);
     }
 
-    if (
-      (currentRoom as Group).members &&
-      !(currentRoom as Group).members.includes(user.id)
-    ) {
+    if (isGroup && !(currentRoom as Group).members.includes(user.id)) {
       const newRoom = {
         ...currentRoom,
         members: [...(currentRoom as Group).members, user.id],
@@ -194,7 +192,7 @@ const LeftBar: FC<Props> = ({
 
     setIsMessagesLoading(true);
     setRoom(roomToUpdate);
-    joinRoom(currentRoom.id);
+    joinRoom(isGroup ? currentRoom.id : currentRoom.commonId);
   };
 
   const fetchAllRooms = (roomIds: ID[]) => {
@@ -267,14 +265,12 @@ const LeftBar: FC<Props> = ({
     });
     socket.on("send_private-room_for_opponent", (roomForOpponent) => {
       handleAddPrivateRoomLocally(roomForOpponent);
-
-      console.log("triggered!", roomForOpponent);
     });
 
     // creating a room
     socket.on("group_created", handleEndRoomCreation);
     socket.on("private-room_created", handleEndRoomCreation);
-    // socket.on("private-room_for_opponent_created", handleEndRoomCreation);
+    socket.on("private-room_for_opponent_created", handleEndRoomCreation);
   }, []);
 
   const skeletonRooms: RoomsType = useMemo(() => {
@@ -282,6 +278,7 @@ const LeftBar: FC<Props> = ({
       ? Array.from({ length: 5 }).map(() => {
           return {
             id: uuid() as ID,
+            commonId: uuid() as ID,
             name: "Fake name",
             creators: [user.id],
             avatar: "",

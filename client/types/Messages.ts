@@ -2,7 +2,8 @@ import { ID } from './PublicTypes';
 
 export type Message = {
   id: ID;
-  author: ID;
+  authorName: ID;
+  authorId: ID;
   avatar: string;
   content: string;
   date: string;

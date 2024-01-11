@@ -7,7 +7,7 @@ import {
   setItemToLS,
 } from "./helpers/localStorageHelpers.ts";
 import LeftBar from "./components/LeftBar.tsx";
-import { RoomType, RoomsType } from "../types/Rooms.ts";
+import { Group, RoomType, RoomsType } from "../types/Rooms.ts";
 import { User } from "../types/Users.ts";
 import { socket } from "./socket.ts";
 import { useMediaQuery } from "@mantine/hooks";
@@ -21,6 +21,9 @@ function App() {
   const [room, setRoom] = useState<RoomType | null>(null);
   const [messages, setMessages] = useState<Messages | null>(null);
   const matches = useMediaQuery("(max-width: 765px)");
+  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
+  const userFromLS: User = getItemFromLS("user");
+
   useSocketCleanup([
     "create_user",
     "user_created",
@@ -28,9 +31,6 @@ function App() {
     "user_creation_failed",
     "get_user",
   ]);
-  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
-
-  const userFromLS: User = getItemFromLS("user");
 
   const createUser = (name: string) => {
     const updateUserData = (data: User) => {
@@ -67,7 +67,10 @@ function App() {
 
   const loadMessages = () => {
     if (room) {
-      socket.emit("get_messages", room.id);
+      socket.emit(
+        "get_messages",
+        (room as Group).members ? room.id : room.commonId,
+      );
 
       socket.on("messages_got", (messages) => {
         setIsMessagesLoading(false);
@@ -85,9 +88,7 @@ function App() {
 
   useEffect(() => {
     if (userFromLS) updateUser();
-  }, [room]);
 
-  useEffect(() => {
     loadMessages();
   }, [room]);
 
@@ -173,10 +174,15 @@ function App() {
 }
 
 // TODO:
-// Check how it works for opponent:
-//  - First of all, I need to add socket id to user credentials
-//  - Then I need to access that socket id in privateRoomsSocket and send that private room to recipient
-//  - That's it
+
+// Messages:
+// configure correct gaps between messages
+
+// Creating of Private Rooms:
+// 1) When I click at the room, new room is created locally.
+// 2) Then, when there's a first message -> we create that room on the server
+
+// Check also tasks on the server side
 
 //? FEATURES:
 // Add responsiveness to that rooms block

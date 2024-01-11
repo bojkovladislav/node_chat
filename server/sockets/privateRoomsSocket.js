@@ -6,45 +6,46 @@ function handlePrivateRoomsEvents(socket, io) {
     try {
       const newPrivateRoom = {
         id: uuid(),
+        commonId: uuid(),
         name: opponent.name,
         avatar: opponent.avatar,
         status: opponent.status,
         creators: [currentUser.id, opponent.id],
       };
 
-      // const roomForOpponent = {
-      //   ...newPrivateRoom,
-      //   name: currentUser.name,
-      //   avatar: currentUser.avatar,
-      //   status: currentUser.status,
-      // };
+      const roomForOpponent = {
+        ...newPrivateRoom,
+        id: uuid(),
+        name: currentUser.name,
+        avatar: currentUser.avatar,
+        status: currentUser.status,
+      };
 
       socket.emit('send_private-room', newPrivateRoom);
+      socket
+        .to(opponent.socketId)
+        .emit('send_private-room_for_opponent', roomForOpponent);
 
-      const existingRoom = await privateRoomsService.createRoom(
-        currentUser.id,
-        newPrivateRoom
-      );
-
-      // const existingRoomForOpponent = await privateRoomsService.createRoom(
-      //   opponent.id,
-      //   roomForOpponent
-      // );
+      await Promise.all([
+        privateRoomsService.createRoom(currentUser.id, newPrivateRoom),
+        privateRoomsService.createRoom(opponent.id, roomForOpponent),
+      ]);
 
       socket.emit('private-room_created', newPrivateRoom);
-      // socket.emit('private-room_for_opponent_created', roomForOpponent);
+      socket
+        .to(opponent.socketId)
+        .emit('private-room_for_opponent_created', roomForOpponent);
 
-      if (existingRoom) {
-        socket.emit('private-room_existed', existingRoom);
+      // if (existingRoom) {
+      //   socket.emit('private-room_existed', existingRoom);
 
-        return;
-      }
+      //   return;
+      // }
 
       // if (existingRoomForOpponent) {
-      //   socket.emit(
-      //     'private-room_for_opponent_existed',
-      //     existingRoomForOpponent
-      //   );
+      //   socket
+      //     .to(opponent.socketId)
+      //     .emit('private-room_for_opponent_existed', existingRoomForOpponent);
 
       //   return;
       // }

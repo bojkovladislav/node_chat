@@ -36,6 +36,7 @@ const Chat: FC<Props> = ({
   const [isUserScrollingUp, setIsUserScrollingUp] = useState(false);
 
   const isUserNearBottom = useRef<boolean>(false);
+  const isOverflowTriggered = useRef<boolean>(false);
 
   const scrollChatToBottom = (smooth: boolean = false) => {
     if (chatWindowRef.current && !isMessagesLoading) {
@@ -53,14 +54,17 @@ const Chat: FC<Props> = ({
   const handleScroll = () => {
     if (chatWindowRef.current) {
       const chatWindow = chatWindowRef.current;
-      const threshold = 5;
+      const threshold = 100;
       const isBottomNearViewportBottom =
         chatWindow.scrollTop + chatWindow.clientHeight >=
         chatWindow.scrollHeight - threshold;
+      const isOverflowScrolling =
+        chatWindow.scrollHeight > chatWindow.clientHeight;
 
       isUserNearBottom.current = isBottomNearViewportBottom;
+      isOverflowTriggered.current = isOverflowScrolling;
 
-      if (isBottomNearViewportBottom) {
+      if (isBottomNearViewportBottom || !isOverflowScrolling) {
         setIsNewMessagesVisible(false);
         setIsUserScrollingUp(false);
       } else {
@@ -74,7 +78,7 @@ const Chat: FC<Props> = ({
   }, [isMessagesLoading, sentMessageId]);
 
   useEffect(() => {
-    if (newMessageFromOpponentId) {
+    if (newMessageFromOpponentId && isOverflowTriggered.current) {
       isUserNearBottom.current
         ? scrollChatToBottom(true)
         : setIsNewMessagesVisible(true);
@@ -127,7 +131,7 @@ const Chat: FC<Props> = ({
           <SendMessageForm
             setSentMessageId={setSentMessageId}
             user={user}
-            roomId={room?.id}
+            roomId={!!(room as Group).members ? room.id : room.commonId}
             isMessagesLoading={isMessagesLoading}
             setMessages={setMessages}
           />

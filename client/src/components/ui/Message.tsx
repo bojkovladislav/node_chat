@@ -10,7 +10,7 @@ interface Props {
   messages: MessageType[];
   message: MessageType;
   index: number;
-  userName: string;
+  userId: ID;
   room: RoomType;
   isMessagesLoading: boolean;
   sentMessageId: ID | null;
@@ -19,15 +19,15 @@ interface Props {
 const Message: FC<Props> = ({
   messages,
   index,
-  userName,
+  userId,
   message,
   room,
   isMessagesLoading,
   sentMessageId,
 }) => {
-  const { author, content, date, id, avatar } = message;
-  const isMyMessage = author === userName;
-  const isNextMessageMine = messages[index + 1]?.author === userName;
+  const { authorName, authorId, content, date, id, avatar } = message;
+  const isMyMessage = authorId === userId;
+  const isNextMessageMine = messages[index + 1]?.authorId === userId;
   const gapClass = isMyMessage ? "mb-1" : isNextMessageMine ? "mb-1" : "mb-5";
 
   return (
@@ -37,9 +37,9 @@ const Message: FC<Props> = ({
       } ${isMyMessage ? "self-end" : "self-start"}`}
     >
       <div className="flex items-center gap-2">
-        {userName !== author && (room as Group).members && (
+        {userId !== authorId && (room as Group).members && (
           <Skeleton visible={isMessagesLoading} circle className="h-fit w-fit">
-            <Avatar userName={author} avatar={avatar} />
+            <Avatar userName={authorName} avatar={avatar} />
           </Skeleton>
         )}
         <div className="flex flex-col gap-1">
@@ -48,17 +48,17 @@ const Message: FC<Props> = ({
               <div className="flex items-end justify-end gap-2">
                 <div
                   className={`flex flex-col gap-2 break-words rounded-lg border-2 border-transparent p-2 text-sm md:max-w-md ${
-                    author === userName ? "bg-blue-500" : "bg-slate-800"
+                    authorId === userId ? "bg-blue-500" : "bg-slate-800"
                   }`}
                 >
-                  {userName !== author && <p className="text-sm">{author}</p>}
+                  {userId !== authorId && <p className="text-sm">{authorName}</p>}
                   <pre className="whitespace-pre-line">{content}</pre>
                 </div>
               </div>
             ) : (
               <pre
                 className={`flex whitespace-pre-line break-words rounded-lg border-2 border-transparent p-2 text-sm md:max-w-md ${
-                  author === userName ? "bg-blue-500" : "bg-slate-800"
+                  authorId === userId ? "bg-blue-500" : "bg-slate-800"
                 }`}
               >
                 {content}

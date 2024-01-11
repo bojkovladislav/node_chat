@@ -45,7 +45,7 @@ const getFilteredUsers = (name) => {
 };
 
 const update = (id, field, newValue) => {
-  return usersCrud.update({ id, [field]: newValue });
+  return usersCrud.update(id, { [field]: newValue });
 };
 
 export const usersServices = {
