@@ -12,11 +12,7 @@ const createRoom = async (userId, newRoom) => {
     return existingRoom;
   }
 
-  await Promise.all([
-    usersServices.addNewRoomId(userId, newRoom.id),
-    messagesService.createMessages(newRoom.commonId),
-    crudPrivateRooms.create(newRoom, newRoom.id),
-  ]);
+  await usersServices.addNewRoomId(userId, newRoom.id);
 
   return null;
 };

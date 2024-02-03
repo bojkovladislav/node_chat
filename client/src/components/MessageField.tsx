@@ -1,5 +1,9 @@
 import { FC, useEffect, useMemo } from "react";
-import { Message as MessageType, Messages } from "../../types/Messages";
+import {
+  Message as MessageType,
+  Messages,
+  OperatedMessage,
+} from "../../types/Messages";
 import { User } from "../../types/Users";
 import { socket } from "../socket";
 import { ID, SetState } from "../../types/PublicTypes";
@@ -8,6 +12,7 @@ import { generateRandomLoremParagraph } from "../helpers/globalHelpers";
 import { RoomType } from "../../types/Rooms";
 import Message from "./ui/Message";
 import "@mantine/core/styles.css";
+import _debounce from "lodash/debounce";
 
 interface Props {
   user: User;
@@ -17,6 +22,8 @@ interface Props {
   setMessages: SetState<Messages | null>;
   room: RoomType;
   setNewMessageFromOpponentId: SetState<null | ID>;
+  setCurrentTypingUserName: SetState<string | null>;
+  setOperatedMessage: SetState<OperatedMessage>;
 }
 
 const MessageField: FC<Props> = ({
@@ -26,11 +33,13 @@ const MessageField: FC<Props> = ({
   isMessagesLoading,
   setNewMessageFromOpponentId,
   sentMessageId,
+  setCurrentTypingUserName,
+  setOperatedMessage,
   room,
 }) => {
   const handleReceiveMessage = (roomId: ID, newMessage: MessageType) => {
     setMessages((prevMessages) => {
-      if (!prevMessages || prevMessages.roomId !== roomId) return prevMessages;
+      if (!prevMessages) return prevMessages; // || prevMessages.roomId !== roomId not sure
 
       setNewMessageFromOpponentId(newMessage.id);
 
@@ -43,8 +52,53 @@ const MessageField: FC<Props> = ({
 
   useEffect(() => {
     socket.on("receive_message", (roomId, newMessage) => {
-      console.log("this log is inside socket");
       handleReceiveMessage(roomId, newMessage);
+    });
+
+    socket.on("receive_deleted_message-id", (messageId) => {
+      setMessages((prevMessages) => {
+        if (!prevMessages) return prevMessages;
+
+        return {
+          ...prevMessages,
+          messages: prevMessages?.messages.filter(
+            (msg) => msg.id !== messageId,
+          ),
+        };
+      });
+    });
+
+    socket.on("receive_updated_message", (messageId, updatedContent) => {
+      setMessages((prevMessages) => {
+        if (!prevMessages) return prevMessages;
+
+        const updatedMessages = prevMessages?.messages.map((msg) => {
+          if (msg.id === messageId) {
+            return {
+              ...msg,
+              content: updatedContent,
+            };
+          }
+
+          return msg;
+        });
+
+        return {
+          ...prevMessages,
+          messages: updatedMessages,
+        };
+      });
+    });
+
+    const debouncedResetUserName = _debounce(
+      () => setCurrentTypingUserName(""),
+      500,
+    );
+
+    socket.on("typing_receive", (userName) => {
+      setCurrentTypingUserName(userName);
+
+      debouncedResetUserName();
     });
 
     return () => {
@@ -52,6 +106,9 @@ const MessageField: FC<Props> = ({
       socket.off("get_messages");
       socket.off("messages_got");
       socket.off("message_created");
+      socket.off("typing_receive");
+
+      debouncedResetUserName.cancel();
     };
   }, []);
 
@@ -79,6 +136,8 @@ const MessageField: FC<Props> = ({
           <Message
             key={message.id}
             room={room}
+            setMessages={setMessages}
+            setOperatedMessage={setOperatedMessage}
             message={message}
             messages={arr}
             index={index}

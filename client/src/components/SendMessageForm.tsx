@@ -1,31 +1,49 @@
-import { FC, FormEvent, useState, useRef, useEffect } from "react";
+import {
+  FC,
+  FormEvent,
+  useState,
+  useRef,
+  useEffect,
+  KeyboardEventHandler,
+} from "react";
 import { EmojiSmile, Send } from "react-bootstrap-icons";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { socket } from "../socket";
 import { User } from "../../types/Users";
 import { ID, SetState } from "../../types/PublicTypes";
-import { Message, Messages } from "../../types/Messages";
+import { Message, Messages, OperatedMessage } from "../../types/Messages";
 import useSocketCleanup from "../hooks/useSocketCleanup";
+import { PrivateRoom, RoomType } from "../../types/Rooms";
+import MessageOperationBar from "./ui/MessageOperationBar";
 
 interface Props {
   setSentMessageId: SetState<ID | null>;
   isMessagesLoading: boolean;
   user: User;
-  roomId: ID;
+  room: RoomType;
   setMessages: SetState<Messages | null>;
+  operatedMessage: OperatedMessage;
+  setOperatedMessage: SetState<OperatedMessage>;
 }
 
 const SendMessageForm: FC<Props> = ({
   user,
-  roomId,
+  room,
   setMessages,
   setSentMessageId,
   isMessagesLoading,
+  operatedMessage,
+  setOperatedMessage,
 }) => {
   const [isEmojiClicked, setIsEmojiClicked] = useState(false);
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  useSocketCleanup(["message_created", "send_message", "create_message"]);
+  useSocketCleanup([
+    "message_created",
+    "send_message",
+    "create_message",
+    "typing_trigger",
+  ]);
 
   const getDate = () => {
     const currentDate = new Date(Date.now());
@@ -38,15 +56,19 @@ const SendMessageForm: FC<Props> = ({
     return `${hours}:${minutes}`;
   };
 
+  const handleCloseBar = () => {
+    setMessage("");
+
+    setOperatedMessage({ message: null, edited: false, replied: false });
+  };
+
   const handleSetMessage = (newMessage: Message) => {
     setSentMessageId(newMessage.id);
 
     setMessages((prevMessages) => {
-      if (!prevMessages) return prevMessages;
-
       return {
-        ...prevMessages,
-        messages: [...prevMessages.messages, newMessage],
+        roomId: room.id,
+        messages: [...(prevMessages?.messages || []), newMessage],
       };
     });
 
@@ -58,9 +80,53 @@ const SendMessageForm: FC<Props> = ({
 
     if (message === "") return;
 
-    socket.emit("create_message", roomId, user, message, getDate());
-
     setMessage("");
+
+    handleCloseBar();
+
+    if (!operatedMessage.edited) {
+      socket.emit(
+        "create_message",
+        room,
+        user,
+        message,
+        getDate(),
+        operatedMessage.replied && {
+          author: operatedMessage.message?.authorName,
+          message: operatedMessage.message?.content,
+        },
+      );
+    } else {
+      socket.emit(
+        "update_message",
+        (room as PrivateRoom).commonId
+          ? (room as PrivateRoom).commonId
+          : room.id,
+        operatedMessage.message?.id,
+        message,
+      );
+
+      setMessages((prevMessages) => {
+        const updatedMessages = prevMessages?.messages.map((msg) => {
+          if (
+            operatedMessage.message &&
+            msg.id === operatedMessage.message.id
+          ) {
+            return {
+              ...msg,
+              content: message,
+            };
+          }
+
+          return msg;
+        });
+
+        return {
+          roomId: room.id,
+          messages: updatedMessages || [],
+        };
+      });
+    }
   };
 
   const updateTextareaHeight = () => {
@@ -73,53 +139,81 @@ const SendMessageForm: FC<Props> = ({
     }
   };
 
+  const handleInputChange = (value: string) => {
+    setMessage(value);
+    updateTextareaHeight();
+
+    if (!operatedMessage.message) {
+      socket.emit(
+        "typing_trigger",
+        user.name,
+        (room as PrivateRoom).commonId || room.id,
+      );
+    }
+  };
+
+  const handleType: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) handleSendMessage(e);
+  };
+
   useEffect(() => {
-    socket.on("send_message", (message: any) => {
-      console.log("it happened!"), handleSetMessage(message);
-    });
+    socket.on("send_message", handleSetMessage);
     socket.on("message_created", () => {
       setSentMessageId(null);
     });
   }, []);
 
+  useEffect(() => {
+    textareaRef.current && textareaRef.current.focus();
+
+    if (operatedMessage.edited && operatedMessage.message) {
+      setMessage(operatedMessage.message.content.trim());
+    }
+  }, [operatedMessage.message]);
+
   return (
     <form
-      className="flex w-full items-center gap-5 border-t border-slate-600 bg-slate-900 px-5 py-3"
+      className="z-10 flex flex-col gap-5 border-t border-slate-600 bg-slate-900 px-5 py-3"
       onSubmit={handleSendMessage}
     >
-      <EmojiSmile
-        color="#3b82f6"
-        size={20}
-        cursor="pointer"
-        onClick={() => setIsEmojiClicked(!isEmojiClicked)}
-      />
-      {isEmojiClicked && (
-        <div className="absolute bottom-16">
-          <EmojiPicker
-            theme={Theme.DARK}
-            onEmojiClick={(emoji) =>
-              setMessage((prevMessage) => `${prevMessage}${emoji.emoji}`)
-            }
-          />
-        </div>
+      {operatedMessage.message && (
+        <MessageOperationBar
+          message={operatedMessage.message}
+          operation={operatedMessage.edited ? "edit" : "reply"}
+          handleCloseBar={handleCloseBar}
+        />
       )}
-      <textarea
-        className="h-8 w-full resize-none rounded-md border-transparent bg-slate-700 p-1 text-sm outline-none"
-        placeholder="Write a message..."
-        ref={textareaRef}
-        value={message}
-        disabled={isMessagesLoading}
-        onChange={(e) => {
-          setMessage(e.target.value);
-          updateTextareaHeight();
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) handleSendMessage(e);
-        }}
-      />
-      <button type="submit">
-        <Send color="#3b82f6" size={20} cursor="pointer" />
-      </button>
+
+      <div className="flex w-full items-center gap-5">
+        <EmojiSmile
+          color="#3b82f6"
+          size={20}
+          cursor="pointer"
+          onClick={() => setIsEmojiClicked(!isEmojiClicked)}
+        />
+        {isEmojiClicked && (
+          <div className="absolute bottom-16">
+            <EmojiPicker
+              theme={Theme.DARK}
+              onEmojiClick={(emoji) =>
+                setMessage((prevMessage) => `${prevMessage}${emoji.emoji}`)
+              }
+            />
+          </div>
+        )}
+        <textarea
+          className="h-8 w-full resize-none rounded-md border-transparent bg-slate-700 p-1 text-sm outline-none"
+          placeholder="Write a message..."
+          ref={textareaRef}
+          value={message}
+          disabled={isMessagesLoading}
+          onChange={(e) => handleInputChange(e.target.value)}
+          onKeyDown={handleType}
+        />
+        <button type="submit">
+          <Send color="#3b82f6" size={20} cursor="pointer" />
+        </button>
+      </div>
     </form>
   );
 };

@@ -107,21 +107,28 @@ const LeftBar: FC<Props> = ({
   const handleRoomDelete = (
     roomType: "group" | "private-room",
     e: MouseEvent,
-    id: ID,
+    currentRoom: RoomType,
   ) => {
     e.stopPropagation();
-    handleRoomDeleteLocally(id);
+
+    handleRoomDeleteLocally(currentRoom.id);
 
     if (roomType === "private-room" && filteredChats) {
-      const deletedUser = filteredChats.find((chat) => chat.id === id);
-
-      if (deletedUser) deletedUser.creators = [];
-
-      setFilteredChats(filteredChats.filter((chat) => chat.id !== id));
+      setFilteredChats((prevChats) => {
+        const updatedChats =
+          prevChats &&
+          prevChats.map((chat) =>
+            chat.id === currentRoom.id ? { ...chat, creators: [] } : chat,
+          );
+        return (
+          updatedChats &&
+          updatedChats.filter((chat) => chat.id !== currentRoom.id)
+        );
+      });
     }
 
     if (user) {
-      socket.emit(`delete_${roomType}`, id, user.id, true);
+      socket.emit(`delete_${roomType}`, currentRoom, user.id, true);
     }
 
     socket.on(`failed_delete_${roomType}`, console.log);
@@ -166,6 +173,13 @@ const LeftBar: FC<Props> = ({
     setIsCreateNewChatTriggered(true);
   };
 
+  const handleRoomEnterLocally = (currentRoom: PrivateRoom) => {
+    if (currentRoom.id === room?.id) return;
+
+    setRoom(currentRoom);
+    joinRoom(currentRoom.commonId);
+  };
+
   const handleRoomEnter = (currentRoom: RoomType) => {
     if (currentRoom.id === room?.id) return;
 
@@ -192,7 +206,7 @@ const LeftBar: FC<Props> = ({
 
     setIsMessagesLoading(true);
     setRoom(roomToUpdate);
-    joinRoom(isGroup ? currentRoom.id : currentRoom.commonId);
+    joinRoom(isGroup ? currentRoom.id : (currentRoom as PrivateRoom).commonId);
   };
 
   const fetchAllRooms = (roomIds: ID[]) => {
@@ -222,9 +236,15 @@ const LeftBar: FC<Props> = ({
       return;
     }
 
-    socket.emit("create_private-room", user, currentRoom);
+    const newLocalRoom = {
+      ...currentRoom,
+      id: uuid() as ID,
+      commonId: uuid() as ID,
+      creators: [user.id, currentRoom.id],
+    };
 
-    socket.on("private-room_creation_failed", console.log);
+    handleAddPrivateRoomLocally(newLocalRoom);
+    handleEndRoomCreation(newLocalRoom);
   };
 
   const renderFilteredRooms = useCallback(
@@ -255,22 +275,23 @@ const LeftBar: FC<Props> = ({
     ],
   );
 
+  // So here we are just entering the new private room created locally
+  useEffect(() => {
+    if (addedRoomId) {
+      const brandNewRoom = rooms.find((room) => room.id === addedRoomId);
+
+      if (brandNewRoom) {
+        handleRoomEnterLocally(brandNewRoom as PrivateRoom);
+      }
+    }
+  }, [rooms]);
+
   useEffect(() => {
     fetchAllRooms(user.rooms);
 
     // we need to send a group earlier here to deliver data to our user faster
     socket.on("send_group", handleAddRoomLocally);
-    socket.on("send_private-room", (room) => {
-      handleAddPrivateRoomLocally(room);
-    });
-    socket.on("send_private-room_for_opponent", (roomForOpponent) => {
-      handleAddPrivateRoomLocally(roomForOpponent);
-    });
-
-    // creating a room
     socket.on("group_created", handleEndRoomCreation);
-    socket.on("private-room_created", handleEndRoomCreation);
-    socket.on("private-room_for_opponent_created", handleEndRoomCreation);
   }, []);
 
   const skeletonRooms: RoomsType = useMemo(() => {
@@ -279,6 +300,8 @@ const LeftBar: FC<Props> = ({
           return {
             id: uuid() as ID,
             commonId: uuid() as ID,
+            opponentRoomId: uuid() as ID,
+            opponentUserId: uuid() as ID,
             name: "Fake name",
             creators: [user.id],
             avatar: "",

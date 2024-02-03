@@ -17,7 +17,7 @@ interface Props {
   handleRoomDelete: (
     roomType: "group" | "private-room",
     e: MouseEvent,
-    id: ID,
+    currentRoom: RoomType,
   ) => void;
   roomId?: ID;
   user: User;

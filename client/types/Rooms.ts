@@ -3,13 +3,17 @@ import { ID, USER_STATUS } from './PublicTypes';
 export type PrivateRoom = {
   id: ID;
   commonId: ID;
+  opponentRoomId: ID;
   avatar: string;
   status: USER_STATUS;
   name: string;
   creators: ID[];
 };
 
-export type Group = Omit<PrivateRoom, 'status, commonId'> & {
+export type Group = Omit<
+  PrivateRoom,
+  'status' | 'commonId' | 'opponentRoomId'
+> & {
   members: ID[];
   public: boolean;
 };

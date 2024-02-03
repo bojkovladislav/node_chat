@@ -27,11 +27,12 @@ export default class CRUD {
     return docRef.get();
   }
 
-  async getByName(name) {
+  async getBy(propertyName, propertyValue) {
     const querySnapshot = await this.collection
-      .where('name', '==', name)
+      .where(propertyName, '==', propertyValue)
       .limit(1)
       .get();
+
     const results = [];
 
     querySnapshot.forEach((doc) => {

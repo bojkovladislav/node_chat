@@ -1,77 +1,81 @@
+import { createRoomForOpponent } from '../helpers/socketHelpers.js';
 import { privateRoomsService } from '../services/private.rooms.service.js';
+import { messagesService } from '../services/messages.service.js';
 import { v4 as uuid } from 'uuid';
 
-function handlePrivateRoomsEvents(socket, io) {
-  socket.on('create_private-room', async (currentUser, opponent) => {
+function handlePrivateRoomsEvents(socket) {
+  socket.on('create_private-room', async (currentUser, opponentRoom) => {
     try {
+      const opponentUserId = opponentRoom.creators[1];
+
       const newPrivateRoom = {
         id: uuid(),
-        commonId: uuid(),
-        name: opponent.name,
-        avatar: opponent.avatar,
-        status: opponent.status,
-        creators: [currentUser.id, opponent.id],
-      };
-
-      const roomForOpponent = {
-        ...newPrivateRoom,
-        id: uuid(),
-        name: currentUser.name,
-        avatar: currentUser.avatar,
-        status: currentUser.status,
+        commonId: opponentRoom.commonId,
+        opponentRoomId: uuid(),
+        name: opponentRoom.name,
+        avatar: opponentRoom.avatar,
+        status: opponentRoom.status,
+        creators: [currentUser.id, opponentUserId],
       };
 
       socket.emit('send_private-room', newPrivateRoom);
-      socket
-        .to(opponent.socketId)
-        .emit('send_private-room_for_opponent', roomForOpponent);
 
-      await Promise.all([
-        privateRoomsService.createRoom(currentUser.id, newPrivateRoom),
-        privateRoomsService.createRoom(opponent.id, roomForOpponent),
-      ]);
+      await createRoomForOpponent(
+        {
+          ...newPrivateRoom,
+          id: newPrivateRoom.opponentRoomId,
+          opponentRoomId: newPrivateRoom.id,
+          name: currentUser.name,
+          avatar: currentUser.avatar,
+          status: currentUser.status,
+          creators: [opponentUserId, currentUser.id],
+        },
+        socket,
+        opponentUserId
+      );
+
+      await privateRoomsService.createRoom(currentUser.id, newPrivateRoom);
 
       socket.emit('private-room_created', newPrivateRoom);
-      socket
-        .to(opponent.socketId)
-        .emit('private-room_for_opponent_created', roomForOpponent);
-
-      // if (existingRoom) {
-      //   socket.emit('private-room_existed', existingRoom);
-
-      //   return;
-      // }
-
-      // if (existingRoomForOpponent) {
-      //   socket
-      //     .to(opponent.socketId)
-      //     .emit('private-room_for_opponent_existed', existingRoomForOpponent);
-
-      //   return;
-      // }
     } catch (error) {
       socket.emit('private-room_creation_failed', {
         message: 'Failed to create a private room',
       });
-
-      console.log(error);
     }
   });
 
-  socket.on('delete_private-room', async (roomId, userId, forEveryone) => {
+  socket.on('delete_private-room', async (room, userId, forEveryone) => {
     try {
       if (forEveryone) {
-        await privateRoomsService.deleteRoomForEveryone(userId, roomId);
+        await privateRoomsService.deleteRoomForEveryone(userId, room.id);
       } else {
-        await privateRoomsService.deleteRoomForSelf(userId, roomId);
+        await privateRoomsService.deleteRoomForSelf(userId, room.id);
       }
 
-      socket.emit('private-room_deleted', roomId);
+      if (room.opponentRoomId) {
+        try {
+          await privateRoomsService.getRoom(room.opponentRoomId);
+        } catch (error) {
+          await deleteMessages(room.commonId);
+        }
+      }
+
+      async function deleteMessages(id) {
+        try {
+          await messagesService.deleteMessages(id);
+        } catch (error) {
+          console.log('Failed to delete messages!');
+        }
+      }
+
+      socket.emit('private-room_deleted', room.id);
     } catch (error) {
       socket.emit(
         'failed_delete_private-room',
         'Failed to delete group! Try again later!'
       );
+
+      console.log(error);
     }
   });
 }

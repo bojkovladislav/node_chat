@@ -13,9 +13,15 @@ const getUsers = () => {
 };
 
 const getUserByName = async (name) => {
-  const users = await usersCrud.getByName(name);
+  const users = await usersCrud.getBy('name', name);
 
   return users[0];
+};
+
+const getUserBySocketId = async (socketId) => {
+  const users = await usersCrud.getBy('socketId', socketId);
+
+  return users[0] || null;
 };
 
 const getUserById = async (id) => {
@@ -41,7 +47,7 @@ const removeRoomId = (id, roomId) => {
 };
 
 const getFilteredUsers = (name) => {
-  return usersCrud.getByName(name);
+  return usersCrud.getBy('name', name);
 };
 
 const update = (id, field, newValue) => {
@@ -56,5 +62,6 @@ export const usersServices = {
   addNewRoomId,
   removeRoomId,
   getFilteredUsers,
+  getUserBySocketId,
   update,
 };

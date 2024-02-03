@@ -3,15 +3,14 @@ import { v4 as uuid } from 'uuid';
 import { handleGetRandomColor } from '../helpers/businessHelpers.js';
 import { userColors } from '../utility/constans.js';
 
-function handleUserEvents(socket, userSocketMap) {
+function handleUserEvents(socket) {
   socket.on('create_user', async (name) => {
     try {
       const existingUser = await usersServices.getUserByName(name);
 
       if (existingUser) {
         socket.emit('user_exists', existingUser);
-
-        console.log('Map in usersSocket (existing user):', userSocketMap);
+        await usersServices.update(existingUser.id, 'status', 'online');
 
         return;
       }
@@ -38,12 +37,23 @@ function handleUserEvents(socket, userSocketMap) {
   socket.on('get_user', async (id) => {
     try {
       await usersServices.update(id, 'socketId', socket.id);
+      await usersServices.update(id, 'status', 'online');
 
       const user = await usersServices.getUserById(id);
 
       socket.emit('user_got', user);
     } catch (error) {
       socket.emit('failed_get_user', 'Failed to get user!');
+    }
+  });
+
+  socket.on('user_disconnect', async (id) => {
+    try {
+      if (id) {
+        await usersServices.update(id, 'status', 'offline');
+      }
+    } catch (error) {
+      console.log(error);
     }
   });
 

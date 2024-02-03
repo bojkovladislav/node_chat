@@ -23,5 +23,17 @@ export function debounce(callback: (...args: any[]) => void, delay: number) {
 
       timerId = null;
     }, delay);
+  };
+}
+
+export async function copyToClipBoard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (error) {
+    throw new Error("Unable to copy the text");
   }
+}
+
+export function normalizeTextLength(text: string, limit: number) {
+  return text.length > limit ? text.slice(0, limit) + "..." : text;
 }

@@ -8,7 +8,7 @@ export const userColors = [
 
 export const groupColors = [
   '#48BB78',
-  '#F6E05E',
+  '#F6E01E',
   '#4299E1',
   '#ED64A6',
   '#9F7AEA',

@@ -26,8 +26,6 @@ function handleGroupsEvent(socket) {
         socket.emit('group_creation_failed', {
           message: 'Failed to create group! Please try again later!',
         });
-
-        console.log(error);
       }
     }
   );
@@ -45,15 +43,15 @@ function handleGroupsEvent(socket) {
     }
   });
 
-  socket.on('delete_group', async (groupId, userId, forEveryone) => {
+  socket.on('delete_group', async (group, userId, forEveryone) => {
     try {
       if (forEveryone) {
-        await groupsService.deleteGroupForEveryone(userId, groupId);
+        await groupsService.deleteGroupForEveryone(userId, group.id);
       } else {
-        await groupsService.deleteGroupForSelf(userId, groupId);
+        await groupsService.deleteGroupForSelf(userId, group.id);
       }
 
-      socket.emit('group_deleted', groupId);
+      socket.emit('group_deleted', group.id);
     } catch (error) {
       socket.emit(
         'failed_delete_group',
@@ -66,8 +64,6 @@ function handleGroupsEvent(socket) {
     try {
       await groupsService.updateMembers(groupId, userId);
     } catch (error) {
-      console.log(error);
-
       socket.emit('failed_update_members', 'Failed to update group members!');
     }
   });

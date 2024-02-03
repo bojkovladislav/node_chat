@@ -3,7 +3,7 @@ import MessageField from "./MessageField";
 import SendMessageForm from "./SendMessageForm";
 import { useMediaQuery } from "@mantine/hooks";
 import { User } from "../../types/Users";
-import { Messages } from "../../types/Messages";
+import { Messages, OperatedMessage } from "../../types/Messages";
 import { ID, SetState } from "../../types/PublicTypes";
 import { Group, RoomType } from "../../types/Rooms";
 import { ArrowLeft } from "react-bootstrap-icons";
@@ -34,7 +34,14 @@ const Chat: FC<Props> = ({
     useState<ID | null>(null);
   const [isNewMessagesVisible, setIsNewMessagesVisible] = useState(false);
   const [isUserScrollingUp, setIsUserScrollingUp] = useState(false);
-
+  const [currentTypingUserName, setCurrentTypingUserName] = useState<
+    string | null
+  >(null);
+  const [operatedMessage, setOperatedMessage] = useState<OperatedMessage>({
+    message: null,
+    edited: false,
+    replied: false,
+  });
   const isUserNearBottom = useRef<boolean>(false);
   const isOverflowTriggered = useRef<boolean>(false);
 
@@ -95,15 +102,29 @@ const Chat: FC<Props> = ({
         <>
           <div className="flex items-center gap-3 border-b-2 border-slate-700 bg-slate-900 p-3">
             {/* header of the chat */}
-            {matches && <ArrowLeft onClick={() => setRoom(null)} />}
+            {matches && (
+              <ArrowLeft
+                onClick={() => {
+                  setRoom(null);
+                  setMessages(null);
+                }}
+              />
+            )}
             <div className="flex-column gap-5">
               <h1 className="text-lg">{room?.name}</h1>
-              {(room as Group)?.members && (
-                <p className="text-xxs text-slate-400">{`${(room as Group)
-                  ?.members.length} member${
-                  (room as Group)?.members.length > 1 ? "s" : ""
-                }`}</p>
-              )}
+              <p
+                className={`text-xxs ${
+                  currentTypingUserName ? "text-blue-500" : "text-slate-500"
+                }`}
+              >
+                {currentTypingUserName
+                  ? `${currentTypingUserName} is typing...`
+                  : (room as Group)?.members
+                    ? `${(room as Group)?.members.length} member${
+                        (room as Group)?.members.length > 1 ? "s" : ""
+                      }`
+                    : user.status}
+              </p>
             </div>
           </div>
 
@@ -125,13 +146,17 @@ const Chat: FC<Props> = ({
               messages={messages}
               setMessages={setMessages}
               room={room}
+              setCurrentTypingUserName={setCurrentTypingUserName}
+              setOperatedMessage={setOperatedMessage}
             />
           </div>
 
           <SendMessageForm
             setSentMessageId={setSentMessageId}
+            operatedMessage={operatedMessage}
+            setOperatedMessage={setOperatedMessage}
             user={user}
-            roomId={!!(room as Group).members ? room.id : room.commonId}
+            room={room}
             isMessagesLoading={isMessagesLoading}
             setMessages={setMessages}
           />

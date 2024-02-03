@@ -1,6 +1,5 @@
 import { FC, MouseEvent, ReactNode } from "react";
 import { Group, RoomType } from "../../../types/Rooms";
-import { ID } from "../../../types/PublicTypes";
 import { Trash } from "react-bootstrap-icons";
 import { Skeleton } from "@mantine/core";
 
@@ -15,7 +14,7 @@ interface Props {
   handleRoomDelete: (
     roomType: "group" | "private-room",
     e: MouseEvent,
-    id: ID,
+    currentRoom: RoomType,
   ) => void;
 }
 
@@ -50,7 +49,7 @@ export const RoomWrapper: FC<Props> = ({
               handleRoomDelete(
                 (currentRoom as Group).members ? "group" : "private-room",
                 e,
-                currentRoom.id,
+                currentRoom,
               );
             }}
           />

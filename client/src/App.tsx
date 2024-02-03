@@ -7,7 +7,7 @@ import {
   setItemToLS,
 } from "./helpers/localStorageHelpers.ts";
 import LeftBar from "./components/LeftBar.tsx";
-import { Group, RoomType, RoomsType } from "../types/Rooms.ts";
+import { Group, PrivateRoom, RoomType, RoomsType } from "../types/Rooms.ts";
 import { User } from "../types/Users.ts";
 import { socket } from "./socket.ts";
 import { useMediaQuery } from "@mantine/hooks";
@@ -30,6 +30,7 @@ function App() {
     "user_exists",
     "user_creation_failed",
     "get_user",
+    "failed_get_messages",
   ]);
 
   const createUser = (name: string) => {
@@ -69,7 +70,7 @@ function App() {
     if (room) {
       socket.emit(
         "get_messages",
-        (room as Group).members ? room.id : room.commonId,
+        (room as Group).members ? room.id : (room as PrivateRoom).commonId,
       );
 
       socket.on("messages_got", (messages) => {
@@ -80,6 +81,8 @@ function App() {
   };
 
   const handleLogOut = () => {
+    socket.emit("user_disconnect", user?.id);
+
     setUser(null);
     removeItemFromLS("user");
     setMessages(null);
@@ -90,6 +93,11 @@ function App() {
     if (userFromLS) updateUser();
 
     loadMessages();
+
+    socket.on("failed_get_messages", () => {
+      setIsMessagesLoading(false);
+      setMessages(null);
+    });
   }, [room]);
 
   return (
@@ -175,18 +183,13 @@ function App() {
 
 // TODO:
 
-// Messages:
-// configure correct gaps between messages
-
-// Creating of Private Rooms:
-// 1) When I click at the room, new room is created locally.
-// 2) Then, when there's a first message -> we create that room on the server
-
+//? Private room functionality:
 // Check also tasks on the server side
+
+// When new private chat is created -> It should work immediately
 
 //? FEATURES:
 // Add responsiveness to that rooms block
 // Add settings to groups
-// Add the possibility to attach a file to a message.
 
 export default App;

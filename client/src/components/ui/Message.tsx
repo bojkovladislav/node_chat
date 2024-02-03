@@ -1,14 +1,30 @@
 import { FC } from "react";
-import { Message as MessageType } from "../../../types/Messages";
+import {
+  Message as MessageType,
+  Messages,
+  OperatedMessage,
+} from "../../../types/Messages";
 import { Skeleton } from "@mantine/core";
 import { Group, RoomType } from "../../../types/Rooms";
-import { Clock } from "react-bootstrap-icons";
-import { ID } from "../../../types/PublicTypes";
+import {
+  Clock,
+  PencilFill,
+  ReplyFill,
+  Clipboard,
+  Trash,
+} from "react-bootstrap-icons";
+import { ID, SetState } from "../../../types/PublicTypes";
 import Avatar from "./Avatar";
+import { useContextMenu } from "mantine-contextmenu";
+import { copyToClipBoard } from "../../helpers/globalHelpers";
+import { socket } from "../../socket";
+import RepliedMessageBar from "./RepliedMessageBar";
 
 interface Props {
   messages: MessageType[];
   message: MessageType;
+  setOperatedMessage: SetState<OperatedMessage>;
+  setMessages: SetState<Messages | null>;
   index: number;
   userId: ID;
   room: RoomType;
@@ -23,18 +39,105 @@ const Message: FC<Props> = ({
   message,
   room,
   isMessagesLoading,
+  setMessages,
   sentMessageId,
+  setOperatedMessage,
 }) => {
+  const { showContextMenu } = useContextMenu();
+
   const { authorName, authorId, content, date, id, avatar } = message;
   const isMyMessage = authorId === userId;
-  const isNextMessageMine = messages[index + 1]?.authorId === userId;
-  const gapClass = isMyMessage ? "mb-1" : isNextMessageMine ? "mb-1" : "mb-5";
+  const gapClass =
+    messages[index].authorId === messages[index + 1]?.authorId
+      ? "mb-1"
+      : "mb-5";
+
+  const contentForMenu = () => {
+    return userId === authorId
+      ? [
+          {
+            key: "reply",
+            onClick: replyMessage,
+            title: "Reply",
+            icon: <ReplyFill size={16} />,
+          },
+          {
+            key: "copy",
+            title: "Copy To Clipboard",
+            icon: <Clipboard size={16} />,
+            onClick: () => copyToClipBoard(content),
+          },
+          {
+            key: "edit",
+            onClick: editMessage,
+            title: "Edit",
+            icon: <PencilFill size={16} />,
+          },
+          {
+            key: "delete",
+            onClick: deleteMessage,
+            title: "Delete",
+            icon: <Trash size={16} />,
+          },
+        ]
+      : [
+          {
+            key: "reply",
+            onClick: replyMessage,
+            title: "Reply",
+            icon: <ReplyFill size={16} />,
+          },
+          {
+            key: "copy",
+            title: "Copy To Clipboard",
+            icon: <Clipboard size={16} />,
+            onClick: () => copyToClipBoard(content),
+          },
+        ];
+  };
+
+  const replyMessage = () => {
+    setOperatedMessage((prevMessage) => ({
+      ...prevMessage,
+      message,
+      replied: true,
+    }));
+  };
+
+  const editMessage = () => {
+    setOperatedMessage((prevMessage) => ({
+      ...prevMessage,
+      message,
+      edited: true,
+    }));
+  };
+
+  const deleteMessage = () => {
+    setMessages((prevMessages) => {
+      if (!prevMessages) return prevMessages;
+
+      return {
+        ...prevMessages,
+        messages: prevMessages?.messages.filter((msg) => msg.id !== id),
+      };
+    });
+
+    socket.emit("delete_message", room.id, id);
+  };
+
+  const handleShowMenu = showContextMenu(contentForMenu(), {
+    style: {
+      backgroundColor: "#0f174a",
+    },
+  });
 
   return (
     <div
-      className={`flex w-fit max-w-full flex-col gap-1 md:max-w-md ${gapClass} ${
-        index === messages.length - 1 ? "mb-0" : ""
-      } ${isMyMessage ? "self-end" : "self-start"}`}
+      className={`flex w-fit max-w-full flex-col gap-1 md:max-w-md ${gapClass}
+      ${isMyMessage ? "self-end" : "self-start"}`}
+      onContextMenu={(e) => {
+        handleShowMenu(e);
+      }}
     >
       <div className="flex items-center gap-2">
         {userId !== authorId && (room as Group).members && (
@@ -51,18 +154,38 @@ const Message: FC<Props> = ({
                     authorId === userId ? "bg-blue-500" : "bg-slate-800"
                   }`}
                 >
-                  {userId !== authorId && <p className="text-sm">{authorName}</p>}
+                  {userId !== authorId && (
+                    <p className="text-sm font-bold text-blue-500">
+                      {authorName}
+                    </p>
+                  )}
+                  {message.repliedMessage && (
+                    <RepliedMessageBar
+                      author={message.repliedMessage.author}
+                      message={message.repliedMessage.message}
+                      isOpponentMessage={userId !== authorId}
+                    />
+                  )}
                   <pre className="whitespace-pre-line">{content}</pre>
                 </div>
               </div>
             ) : (
-              <pre
-                className={`flex whitespace-pre-line break-words rounded-lg border-2 border-transparent p-2 text-sm md:max-w-md ${
+              <div
+                className={`flex flex-col gap-1 ${
                   authorId === userId ? "bg-blue-500" : "bg-slate-800"
-                }`}
+                } rounded-lg border-2 border-transparent p-2 text-sm md:max-w-md`}
               >
-                {content}
-              </pre>
+                {message.repliedMessage && (
+                  <RepliedMessageBar
+                    author={message.repliedMessage.author}
+                    message={message.repliedMessage.message}
+                    isOpponentMessage={userId !== authorId}
+                  />
+                )}
+                <pre className="whitespace-pre-line break-words  ">
+                  {content}
+                </pre>
+              </div>
             )}
           </Skeleton>
           <div className="flex w-full justify-between">

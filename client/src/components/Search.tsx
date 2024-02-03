@@ -61,7 +61,7 @@ const Search: FC<Props> = ({
     return () => {
       debouncedGetRooms.cancel();
     };
-  }, [query]);
+  }, [query.trim()]);
 
   return (
     <div className="flex items-center gap-3 rounded-md border-transparent bg-slate-600 pl-2 ">
