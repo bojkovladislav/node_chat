@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { SyntheticEvent, useEffect, useState } from "react";
 import Chat from "./components/Chat.tsx";
 import Auth from "./components/Auth.tsx";
 import {
@@ -13,7 +13,10 @@ import { socket } from "./socket.ts";
 import { useMediaQuery } from "@mantine/hooks";
 import { Messages } from "../types/Messages.ts";
 import useSocketCleanup from "./hooks/useSocketCleanup.ts";
-import { BoxArrowRight } from "react-bootstrap-icons";
+import { BoxArrowRight, ArrowRight } from "react-bootstrap-icons";
+
+import { ResizableBox } from "react-resizable";
+import "react-resizable/css/styles.css";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -23,6 +26,8 @@ function App() {
   const matches = useMediaQuery("(max-width: 765px)");
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const userFromLS: User = getItemFromLS("user");
+
+  const [width, setWidth] = useState(500);
 
   useSocketCleanup([
     "create_user",
@@ -78,6 +83,10 @@ function App() {
         setMessages(messages);
       });
     }
+  };
+
+  const onResize = (event: SyntheticEvent, { size }: any) => {
+    setWidth(size.width);
   };
 
   const handleLogOut = () => {
@@ -151,14 +160,32 @@ function App() {
                     )
                   ) : (
                     <>
-                      <LeftBar
-                        user={user}
-                        setRooms={setRooms}
-                        setIsMessagesLoading={setIsMessagesLoading}
-                        rooms={rooms}
-                        room={room}
-                        setRoom={setRoom}
-                      />
+                      <ResizableBox
+                        width={500}
+                        onResize={onResize}
+                        // axis="x"
+                        height={width}
+                        resizeHandles={["e"]}
+                        // minConstraints={[150, 150]}
+                        maxConstraints={[500, 0]}
+                        handle={
+                          <ArrowRight
+                            className=" absolute right-[-10px] top-0 h-full cursor-e-resize"
+                            height="100%"
+                          />
+                        }
+                      >
+                        {/* <div className="resizable-container box hover-handles relative"> */}
+                        <LeftBar
+                          user={user}
+                          setRooms={setRooms}
+                          setIsMessagesLoading={setIsMessagesLoading}
+                          rooms={rooms}
+                          room={room}
+                          setRoom={setRoom}
+                        />
+                        {/* </div> */}
+                      </ResizableBox>
                       <Chat
                         user={user}
                         messages={messages}
@@ -186,7 +213,12 @@ function App() {
 //? Private room functionality:
 // Check also tasks on the server side
 
-// When new private chat is created -> It should work immediately
+// The room is not added right away to the rooms
+// - to fix that, when room is added on the server - I can add that room id to the user's rooms array
+
+// When two rooms are created, you delete your room and then try to create a new one -> check for another room existence
+
+// on mobile version fix fetching rooms
 
 //? FEATURES:
 // Add responsiveness to that rooms block

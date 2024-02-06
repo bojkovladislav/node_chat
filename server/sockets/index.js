@@ -37,6 +37,8 @@ export function initializeWebSocket(io) {
     socket.on('typing_trigger', (userName, roomId) => {
       socket.to(roomId).emit('typing_receive', userName);
     });
+
+    console.log(socket.id);
   });
 }
 

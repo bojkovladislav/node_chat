@@ -2,6 +2,7 @@ import { messagesService } from '../services/messages.service.js';
 import { v4 as uuid } from 'uuid';
 import { privateRoomsService } from '../services/private.rooms.service.js';
 import { createRoomForOpponent } from '../helpers/socketHelpers.js';
+import { usersServices } from '../services/users.service.js';
 
 function messagesEventHandler(socket) {
   socket.on('create_messages', async (roomId) => {
@@ -68,6 +69,14 @@ function messagesEventHandler(socket) {
     if (!existingMessages.exists) {
       try {
         socket.emit('send_private-room', newPrivateRoom);
+
+        const opponentUser = await usersServices.getUserById(opponentUserId);
+
+        socket
+          .to(opponentUser.socketId)
+          .emit('send_private-room_to_opponent', newPrivateRoom);
+
+        socket.join(room.commonId);
 
         await createRoomForOpponent(
           generateOpponentRoom(newPrivateRoom, author),

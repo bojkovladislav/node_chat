@@ -12,6 +12,22 @@ body {
   background-color: #417bb5 !important;
 }
 
+.resizable-container {
+  overflow: auto;
+  user-select: none;
+}
+/* 
+.react-resizable-handle {
+  background-color: white !important;
+}
+
+.hover-handles .react-resizable-container {
+  display: none;
+}
+.hover-handles:hover .react-resizable-container {
+  display: block;
+} */
+
 @layer components {
   .button {
     min-width: 100px;
@@ -25,7 +41,7 @@ body {
 
   .input {
     width: 100%;
-    background-color: #334155;
+    background-color: white;
     border: 1px solid transparent;
     font-weight: bold;
     border-radius: 5px;
