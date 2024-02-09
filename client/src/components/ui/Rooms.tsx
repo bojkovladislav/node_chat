@@ -35,7 +35,7 @@ const Rooms: FC<Props> = ({
   isRoomsLoading,
 }) => {
   return (
-    <div className="flex w-screen flex-col gap-0 md:w-96">
+    <div className="flex flex-col gap-0">
       {rooms.map((currentRoom: RoomType) => {
         const { id, name, creators, avatar } = currentRoom;
 

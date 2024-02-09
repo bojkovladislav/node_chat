@@ -30,7 +30,7 @@ export const RoomWrapper: FC<Props> = ({
 }) => {
   return (
     <div
-      className={`flex w-full items-center justify-between border-b border-slate-600 p-3 ${
+      className={`flex items-center justify-between border-b border-slate-600 p-3 ${
         active && "bg-slate-700"
       } ${isRoomsLoading && "pointer-events-none"}`}
       onClick={() => deleteRoomCondition && handleRoomEnter(currentRoom)}

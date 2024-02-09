@@ -16,6 +16,7 @@ interface Props {
   handleInputChange: (value: string) => void;
   inputError: string;
   isRoomsLoading: boolean;
+  leftBarCurrentWidth?: number;
 }
 
 const AddNewChat: FC<Props> = ({
@@ -27,6 +28,7 @@ const AddNewChat: FC<Props> = ({
   setIsCreateNewChatTriggered,
   setIsPublic,
   handleInputChange,
+  leftBarCurrentWidth,
   inputError,
   isRoomsLoading,
 }) => {
@@ -84,7 +86,13 @@ const AddNewChat: FC<Props> = ({
                 onChange={() => setIsPublic(!isPublic)}
               />
             </div>
-            <div className="flex w-full justify-between">
+            <div
+              className={`flex w-full justify-between ${
+                leftBarCurrentWidth &&
+                leftBarCurrentWidth <= 370 &&
+                "flex-col gap-3"
+              }`}
+            >
               <button className="button bg-blue-500">Done</button>
               <button
                 className="button bg-red-500"

@@ -1,4 +1,4 @@
-import { SyntheticEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Chat from "./components/Chat.tsx";
 import Auth from "./components/Auth.tsx";
 import {
@@ -13,10 +13,10 @@ import { socket } from "./socket.ts";
 import { useMediaQuery } from "@mantine/hooks";
 import { Messages } from "../types/Messages.ts";
 import useSocketCleanup from "./hooks/useSocketCleanup.ts";
-import { BoxArrowRight, ArrowRight } from "react-bootstrap-icons";
+import { BoxArrowRight } from "react-bootstrap-icons";
 
-import { ResizableBox } from "react-resizable";
-import "react-resizable/css/styles.css";
+import { useResizable } from "react-resizable-layout";
+import SplitterForResize from "./components/ui/SplitterForResize.tsx";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -27,7 +27,16 @@ function App() {
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const userFromLS: User = getItemFromLS("user");
 
-  const [width, setWidth] = useState(500);
+  const {
+    isDragging: isLeftBarDragging,
+    position: leftBarCurrentWidth,
+    splitterProps: leftBarDragBarProps,
+  } = useResizable({
+    axis: "x",
+    initial: 500,
+    min: 315,
+    max: 500,
+  });
 
   useSocketCleanup([
     "create_user",
@@ -83,10 +92,6 @@ function App() {
         setMessages(messages);
       });
     }
-  };
-
-  const onResize = (event: SyntheticEvent, { size }: any) => {
-    setWidth(size.width);
   };
 
   const handleLogOut = () => {
@@ -160,32 +165,21 @@ function App() {
                     )
                   ) : (
                     <>
-                      <ResizableBox
-                        width={500}
-                        onResize={onResize}
-                        // axis="x"
-                        height={width}
-                        resizeHandles={["e"]}
-                        // minConstraints={[150, 150]}
-                        maxConstraints={[500, 0]}
-                        handle={
-                          <ArrowRight
-                            className=" absolute right-[-10px] top-0 h-full cursor-e-resize"
-                            height="100%"
-                          />
-                        }
-                      >
-                        {/* <div className="resizable-container box hover-handles relative"> */}
+                      <div style={{ width: leftBarCurrentWidth }}>
                         <LeftBar
                           user={user}
+                          leftBarCurrentWidth={leftBarCurrentWidth}
                           setRooms={setRooms}
                           setIsMessagesLoading={setIsMessagesLoading}
                           rooms={rooms}
                           room={room}
                           setRoom={setRoom}
                         />
-                        {/* </div> */}
-                      </ResizableBox>
+                      </div>
+                      <SplitterForResize
+                        isDragging={isLeftBarDragging}
+                        {...leftBarDragBarProps}
+                      />
                       <Chat
                         user={user}
                         messages={messages}

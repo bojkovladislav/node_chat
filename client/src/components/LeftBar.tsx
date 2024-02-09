@@ -31,11 +31,20 @@ interface Props {
   room: RoomType | null;
   setRoom: SetState<RoomType | null>;
   setIsMessagesLoading: SetState<boolean>;
+  leftBarCurrentWidth?: number;
   user: User;
 }
 
 const LeftBar: FC<Props> = memo(
-  ({ rooms, setRooms, room, setRoom, user, setIsMessagesLoading }) => {
+  ({
+    rooms,
+    setRooms,
+    room,
+    setRoom,
+    user,
+    setIsMessagesLoading,
+    leftBarCurrentWidth,
+  }) => {
     const [isCreateNewChatTriggered, setIsCreateNewChatTriggered] =
       useState(false);
     const [roomName, setRoomName] = useState("");
@@ -315,7 +324,7 @@ const LeftBar: FC<Props> = memo(
 
     return (
       <div
-        className={`flex w-fit flex-col gap-5 overflow-y-auto overflow-x-hidden pb-3 pt-3 md:min-w-fit`}
+        className={`flex w-full flex-col gap-5 overflow-y-auto overflow-x-hidden pb-3 pt-3`}
       >
         <div className="mx-5 flex flex-col gap-7">
           <Search
@@ -330,6 +339,7 @@ const LeftBar: FC<Props> = memo(
           {!query.length && (
             <AddNewChat
               handleOpenRoomCreation={handleOpenRoomCreation}
+              leftBarCurrentWidth={leftBarCurrentWidth}
               handleRoomAdd={handleGroupAdd}
               isCreateNewChatTriggered={isCreateNewChatTriggered}
               isPublic={isPublic}
@@ -342,8 +352,10 @@ const LeftBar: FC<Props> = memo(
             />
           )}
         </div>
+
         {!!query.length ? (
-          <div className="flex w-screen flex-col gap-3 md:w-96">
+          // md:w-96
+          <div className="flex flex-col gap-3">
             {["chats", "users"].map((roomType, i) => (
               <div key={i} className="flex flex-col gap-1">
                 <h1 className="ml-5 text-lg">

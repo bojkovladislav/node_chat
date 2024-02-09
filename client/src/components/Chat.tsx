@@ -90,7 +90,7 @@ const Chat: FC<Props> = memo(
       <div
         className={`relative flex h-full w-full flex-col ${
           !room && "flex items-center justify-center"
-        } overflow-y-hidden border-slate-700 md:border-l-2`}
+        } overflow-y-hidden border-slate-700 `}
       >
         {room ? (
           <>
