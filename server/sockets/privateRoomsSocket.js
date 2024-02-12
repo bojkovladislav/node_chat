@@ -2,6 +2,7 @@ import { createRoomForOpponent } from '../helpers/socketHelpers.js';
 import { privateRoomsService } from '../services/private.rooms.service.js';
 import { messagesService } from '../services/messages.service.js';
 import { v4 as uuid } from 'uuid';
+import { generateOpponentRoom } from '../helpers/privateRoomsHelpers.js';
 
 function handlePrivateRoomsEvents(socket) {
   socket.on('create_private-room', async (currentUser, opponentRoom) => {
@@ -77,6 +78,20 @@ function handlePrivateRoomsEvents(socket) {
 
       console.log(error);
     }
+  });
+
+  socket.on('check_for_existing_opponent_room', async (room, author) => {
+    const creators = [author.id, room.creators[0]];
+
+    const opponentRoom = await privateRoomsService.getRoomByCreators(creators);
+
+    const newPrivateRoom = generateOpponentRoom(opponentRoom, room);
+
+    socket.emit('send_private-room', newPrivateRoom);
+
+    await privateRoomsService.createRoom(author.id, newPrivateRoom);
+
+    socket.emit('private-room_created', newPrivateRoom);
   });
 }
 

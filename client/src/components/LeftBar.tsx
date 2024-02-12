@@ -1,5 +1,4 @@
 import {
-  FC,
   useEffect,
   useState,
   FormEvent,
@@ -35,7 +34,7 @@ interface Props {
   user: User;
 }
 
-const LeftBar: FC<Props> = memo(
+const LeftBar = memo<Props>(
   ({
     rooms,
     setRooms,
@@ -63,6 +62,7 @@ const LeftBar: FC<Props> = memo(
       "rooms_got",
       "join_room",
       "send_private-room",
+      "check_for_existing_opponent_room",
       // groups
       "create_group",
       "group_created",
@@ -238,6 +238,12 @@ const LeftBar: FC<Props> = memo(
         return;
       }
 
+      if (!currentRoom.opponentRoomId) {
+        socket.emit("check_for_existing_opponent_room", currentRoom, user);
+
+        return;
+      }
+
       const newLocalRoom = {
         ...currentRoom,
         id: uuid() as ID,
@@ -294,14 +300,22 @@ const LeftBar: FC<Props> = memo(
       socket.on("group_created", handleEndRoomCreation);
 
       socket.on("send_private-room_to_opponent", (newPrivateRoom) => {
-        console.log(newPrivateRoom);
-
         setRooms((prevRooms) => [newPrivateRoom, ...prevRooms]);
       });
+
+      socket.on("send_private-room", (newPrivateRoom) => {
+        handleAddPrivateRoomLocally(newPrivateRoom);
+
+        setIsMessagesLoading(true);
+      });
+      socket.on("private-room_created", handleEndRoomCreation);
 
       return () => {
         socket.off("send_private_room");
         socket.off("send_private-room_to_opponent");
+
+        socket.off("send_private-room");
+        socket.off("private-room_created");
       };
     }, []);
 

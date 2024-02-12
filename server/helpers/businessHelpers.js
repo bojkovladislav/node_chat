@@ -15,7 +15,7 @@ export function checkDefaultParams(params) {
   if (absentParams.length) {
     throw ApiError.badRequest(
       `You need to provide the following params:${[...absentParams]}`
-    );
+  );
   }
 }
 
@@ -24,3 +24,10 @@ export const handleGetRandomColor = (colors) => {
 
   return colors[randomIndex];
 };
+
+export function arraysAreEqual(arr1, arr2) {
+  return (
+    arr1.length === arr2.length &&
+    arr1.every((value, index) => value === arr2[index])
+  );
+}

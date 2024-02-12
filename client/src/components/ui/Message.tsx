@@ -44,7 +44,6 @@ const Message: FC<Props> = ({
   setOperatedMessage,
 }) => {
   const { showContextMenu } = useContextMenu();
-
   const { authorName, authorId, content, date, id, avatar } = message;
   const isMyMessage = authorId === userId;
   const gapClass =
@@ -53,20 +52,24 @@ const Message: FC<Props> = ({
       : "mb-5";
 
   const contentForMenu = () => {
+    const commonOptions = [
+      {
+        key: "reply",
+        onClick: replyMessage,
+        title: "Reply",
+        icon: <ReplyFill size={16} />,
+      },
+      {
+        key: "copy",
+        title: "Copy To Clipboard",
+        icon: <Clipboard size={16} />,
+        onClick: () => copyToClipBoard(content),
+      },
+    ];
+
     return userId === authorId
       ? [
-          {
-            key: "reply",
-            onClick: replyMessage,
-            title: "Reply",
-            icon: <ReplyFill size={16} />,
-          },
-          {
-            key: "copy",
-            title: "Copy To Clipboard",
-            icon: <Clipboard size={16} />,
-            onClick: () => copyToClipBoard(content),
-          },
+          ...commonOptions,
           {
             key: "edit",
             onClick: editMessage,
@@ -80,20 +83,7 @@ const Message: FC<Props> = ({
             icon: <Trash size={16} />,
           },
         ]
-      : [
-          {
-            key: "reply",
-            onClick: replyMessage,
-            title: "Reply",
-            icon: <ReplyFill size={16} />,
-          },
-          {
-            key: "copy",
-            title: "Copy To Clipboard",
-            icon: <Clipboard size={16} />,
-            onClick: () => copyToClipBoard(content),
-          },
-        ];
+      : commonOptions;
   };
 
   const replyMessage = () => {
@@ -139,55 +129,35 @@ const Message: FC<Props> = ({
         handleShowMenu(e);
       }}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex gap-2">
         {userId !== authorId && (room as Group).members && (
           <Skeleton visible={isMessagesLoading} circle className="h-fit w-fit">
             <Avatar userName={authorName} avatar={avatar} />
           </Skeleton>
         )}
-        <div className="flex flex-col gap-1">
+
+        <div className={`flex max-w-[250px] flex-col gap-1 md:max-w-md`}>
           <Skeleton visible={isMessagesLoading}>
-            {(room as Group).members ? (
-              <div className="flex items-end justify-end gap-2">
-                <div
-                  className={`flex flex-col gap-2 break-words rounded-lg border-2 border-transparent p-2 text-sm md:max-w-md ${
-                    authorId === userId ? "bg-blue-500" : "bg-slate-800"
-                  }`}
-                >
-                  {userId !== authorId && (
-                    <p className="text-sm font-bold text-blue-500">
-                      {authorName}
-                    </p>
-                  )}
-                  {message.repliedMessage && (
-                    <RepliedMessageBar
-                      author={message.repliedMessage.author}
-                      message={message.repliedMessage.message}
-                      isOpponentMessage={userId !== authorId}
-                    />
-                  )}
-                  <pre className="whitespace-pre-line">{content}</pre>
-                </div>
-              </div>
-            ) : (
-              <div
-                className={`flex flex-col gap-1 ${
-                  authorId === userId ? "bg-blue-500" : "bg-slate-800"
-                } rounded-lg border-2 border-transparent p-2 text-sm md:max-w-md`}
-              >
-                {message.repliedMessage && (
-                  <RepliedMessageBar
-                    author={message.repliedMessage.author}
-                    message={message.repliedMessage.message}
-                    isOpponentMessage={userId !== authorId}
-                  />
-                )}
-                <pre className="whitespace-pre-line break-words  ">
-                  {content}
-                </pre>
-              </div>
-            )}
+            <div
+              className={`flex flex-col gap-2 rounded-lg border-2 border-transparent p-2 text-sm ${
+                authorId === userId ? "bg-blue-500" : "bg-slate-800"
+              }`}
+            >
+              {(room as Group).members && userId !== authorId && (
+                <p className="text-sm font-bold text-blue-500">{authorName}</p>
+              )}
+
+              {message.repliedMessage && (
+                <RepliedMessageBar
+                  author={message.repliedMessage.author}
+                  message={message.repliedMessage.message}
+                  isOpponentMessage={userId !== authorId}
+                />
+              )}
+              <pre className="whitespace-pre-line break-words">{content}</pre>
+            </div>
           </Skeleton>
+
           <div className="flex w-full justify-between">
             <Skeleton className="w-fit" visible={isMessagesLoading}>
               <p className="text-xxs text-slate-400">{date}</p>

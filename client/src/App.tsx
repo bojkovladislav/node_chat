@@ -207,15 +207,9 @@ function App() {
 //? Private room functionality:
 // Check also tasks on the server side
 
-// The room is not added right away to the rooms
-// - to fix that, when room is added on the server - I can add that room id to the user's rooms array
-
-// When two rooms are created, you delete your room and then try to create a new one -> check for another room existence
-
 // on mobile version fix fetching rooms
 
 //? FEATURES:
-// Add responsiveness to that rooms block
 // Add settings to groups
 
 export default App;

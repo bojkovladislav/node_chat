@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef, useState, memo } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import MessageField from "./MessageField";
 import SendMessageForm from "./SendMessageForm";
 import { useMediaQuery } from "@mantine/hooks";
@@ -19,7 +19,7 @@ interface Props {
   setRoom: SetState<RoomType | null>;
 }
 
-const Chat: FC<Props> = memo(
+const Chat = memo<Props>(
   ({ user, room, setMessages, messages, setRoom, isMessagesLoading }) => {
     const chatWindowRef = useRef<any>(null);
     const [sentMessageId, setSentMessageId] = useState<ID | null>(null);

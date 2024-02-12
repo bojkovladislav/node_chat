@@ -31,6 +31,12 @@ const getRoom = async (id) => {
   return room._fieldsProto;
 };
 
+const getRoomByCreators = async (creators) => {
+  const rooms = await crudPrivateRooms.getBy('creators', creators);
+
+  return rooms[0];
+};
+
 const getFilteredRooms = async (currentUserName, userName) => {
   const filteredUsers = await new CRUD('Users').filterByName(userName);
 
@@ -69,4 +75,5 @@ export const privateRoomsService = {
   getFilteredRooms,
   deleteRoomForEveryone,
   deleteRoomForSelf,
+  getRoomByCreators,
 };
