@@ -15,7 +15,7 @@ interface Props {
   setIsPublic: SetState<boolean>;
   handleInputChange: (value: string) => void;
   inputError: string;
-  isRoomsLoading: boolean;
+  areRoomsLoading: boolean;
   leftBarCurrentWidth?: number;
 }
 
@@ -30,7 +30,7 @@ const AddNewChat: FC<Props> = ({
   handleInputChange,
   leftBarCurrentWidth,
   inputError,
-  isRoomsLoading,
+  areRoomsLoading,
 }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -47,7 +47,7 @@ const AddNewChat: FC<Props> = ({
         <button
           className="button bg-blue-500"
           onClick={handleOpenRoomCreation}
-          disabled={isRoomsLoading}
+          disabled={areRoomsLoading}
         >
           New chat +
         </button>

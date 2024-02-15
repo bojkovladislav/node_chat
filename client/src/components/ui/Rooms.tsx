@@ -22,7 +22,7 @@ interface Props {
   roomId?: ID;
   user: User;
   addedRoomId: ID | null;
-  isRoomsLoading: boolean;
+  areRoomsLoading: boolean;
 }
 
 const Rooms: FC<Props> = ({
@@ -32,10 +32,10 @@ const Rooms: FC<Props> = ({
   roomId,
   user,
   addedRoomId,
-  isRoomsLoading,
+  areRoomsLoading,
 }) => {
   return (
-    <div className="flex flex-col gap-0">
+    <div className="flex flex-col">
       {rooms.map((currentRoom: RoomType) => {
         const { id, name, creators, avatar } = currentRoom;
 
@@ -48,13 +48,13 @@ const Rooms: FC<Props> = ({
             currentRoom={currentRoom}
             deleteRoomCondition={addedRoomId !== currentRoom.id}
             showDeleteButton={creators.includes(user.id)}
-            isRoomsLoading={isRoomsLoading}
+            isRoomsLoading={areRoomsLoading}
           >
             <Group
               avatar={avatar}
               loading={addedRoomId === currentRoom.id}
               name={name}
-              isRoomsLoading={isRoomsLoading}
+              isRoomsLoading={areRoomsLoading}
             />
           </RoomWrapper>
         ) : (
@@ -66,12 +66,12 @@ const Rooms: FC<Props> = ({
             currentRoom={currentRoom}
             deleteRoomCondition={addedRoomId !== currentRoom.id}
             showDeleteButton={creators.includes(user.id)}
-            isRoomsLoading={isRoomsLoading}
+            isRoomsLoading={areRoomsLoading}
           >
             <PrivateRoom
               currentRoom={currentRoom as PrivateRoomType}
               loading={addedRoomId === currentRoom.id}
-              isRoomsLoading={isRoomsLoading}
+              isRoomsLoading={areRoomsLoading}
             />
           </RoomWrapper>
         );

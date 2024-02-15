@@ -91,15 +91,12 @@ function messagesEventHandler(socket) {
 
         socket.join(room.commonId);
 
-        socket.emit('send_private-room', newPrivateRoom);
         await sendOpponentRoomLocally(roomForOpponent, opponentUserId);
 
         await Promise.all([
           createRoomForOpponent(roomForOpponent, socket, opponentUserId),
           privateRoomsService.createRoom(author.id, newPrivateRoom),
         ]);
-
-        // socket.emit('private-room_created', newPrivateRoom);
       } catch (error) {
         console.log(error);
         console.log('Failed to create private rooms!');

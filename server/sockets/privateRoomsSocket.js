@@ -81,9 +81,15 @@ function handlePrivateRoomsEvents(socket) {
   });
 
   socket.on('check_for_existing_opponent_room', async (room, author) => {
-    const creators = [author.id, room.creators[0]];
+    const creators = [author.id, room.id];
 
     const opponentRoom = await privateRoomsService.getRoomByCreators(creators);
+
+    if (!opponentRoom) {
+      socket.emit('opponent_room_not_exist');
+
+      return;
+    }
 
     const newPrivateRoom = generateOpponentRoom(opponentRoom, room);
 

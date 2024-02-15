@@ -41,6 +41,3 @@ export function initializeWebSocket(io) {
     console.log(socket.id);
   });
 }
-
-// Active users:
-// when user disconnects just update the user status to be offline

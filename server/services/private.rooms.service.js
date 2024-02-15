@@ -34,6 +34,8 @@ const getRoom = async (id) => {
 const getRoomByCreators = async (creators) => {
   const rooms = await crudPrivateRooms.getBy('creators', creators);
 
+  if (!rooms) return;
+
   return rooms[0];
 };
 

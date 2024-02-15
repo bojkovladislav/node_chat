@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import Chat from "./components/Chat.tsx";
 import Auth from "./components/Auth.tsx";
 import {
@@ -17,6 +17,7 @@ import { BoxArrowRight } from "react-bootstrap-icons";
 
 import { useResizable } from "react-resizable-layout";
 import SplitterForResize from "./components/ui/SplitterForResize.tsx";
+import { ID } from "../types/PublicTypes.ts";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -25,6 +26,7 @@ function App() {
   const [messages, setMessages] = useState<Messages | null>(null);
   const matches = useMediaQuery("(max-width: 765px)");
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
+  const [areRoomsLoading, setAreRoomsLoading] = useState(true);
   const userFromLS: User = getItemFromLS("user");
 
   const {
@@ -103,16 +105,37 @@ function App() {
     setRoom(null);
   };
 
+  const fetchAllRooms = (roomIds: ID[]) => {
+    socket.emit("get_rooms", roomIds);
+
+    socket.on("rooms_got", (rooms) => {
+      setAreRoomsLoading(false);
+      setRooms(rooms);
+    });
+  };
+
   useEffect(() => {
     if (userFromLS) updateUser();
 
+    setAreRoomsLoading(true);
+  }, []);
+
+  useEffect(() => {
     loadMessages();
 
     socket.on("failed_get_messages", () => {
       setIsMessagesLoading(false);
       setMessages(null);
     });
+
+    return () => {
+      socket.off("failed_get_messages");
+    };
   }, [room]);
+
+  useEffect(() => {
+    if (user) fetchAllRooms(user?.rooms);
+  }, [user]);
 
   return (
     <div
@@ -147,6 +170,7 @@ function App() {
                     !room ? (
                       <LeftBar
                         user={user}
+                        areRoomsLoading={areRoomsLoading}
                         setRooms={setRooms}
                         setIsMessagesLoading={setIsMessagesLoading}
                         rooms={rooms}
@@ -165,7 +189,9 @@ function App() {
                     )
                   ) : (
                     <>
-                      <div style={{ width: leftBarCurrentWidth }}>
+                      <div
+                        style={{ width: leftBarCurrentWidth, overflow: "auto" }}
+                      >
                         <LeftBar
                           user={user}
                           leftBarCurrentWidth={leftBarCurrentWidth}
@@ -173,6 +199,7 @@ function App() {
                           setIsMessagesLoading={setIsMessagesLoading}
                           rooms={rooms}
                           room={room}
+                          areRoomsLoading={areRoomsLoading}
                           setRoom={setRoom}
                         />
                       </div>
@@ -205,11 +232,13 @@ function App() {
 // TODO:
 
 //? Private room functionality:
-// Check also tasks on the server side
+// mobile:
+// fix fetching rooms
+// add interactivity with everything
 
-// on mobile version fix fetching rooms
+// encrypt messages
 
 //? FEATURES:
 // Add settings to groups
 
-export default App;
+export default memo(App);

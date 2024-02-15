@@ -28,12 +28,27 @@ export default class CRUD {
   }
 
   async getBy(propertyName, propertyValue) {
-    const querySnapshot = await this.collection
-      .where(propertyName, '==', propertyValue)
-      .limit(1)
-      .get();
-
+    let querySnapshot;
     const results = [];
+
+    function getQuerySnapshot(name = propertyName, value = propertyValue) {
+      return this.collection.where(name, '==', value).limit(1).get();
+    }
+
+    const boundGetQuerySnapShot = getQuerySnapshot.bind(this);
+
+    if (Array.isArray(propertyValue)) {
+      querySnapshot = await boundGetQuerySnapShot();
+
+      if (querySnapshot.size === 0) {
+        querySnapshot = await boundGetQuerySnapShot(
+          propertyName,
+          propertyValue.reverse()
+        );
+      }
+    } else {
+      querySnapshot = await boundGetQuerySnapShot();
+    }
 
     querySnapshot.forEach((doc) => {
       results.push(doc.data());

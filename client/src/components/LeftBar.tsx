@@ -6,6 +6,7 @@ import {
   useMemo,
   useCallback,
   memo,
+  useRef,
 } from "react";
 import { v4 as uuid } from "uuid";
 import { socket } from "../socket";
@@ -31,6 +32,7 @@ interface Props {
   setRoom: SetState<RoomType | null>;
   setIsMessagesLoading: SetState<boolean>;
   leftBarCurrentWidth?: number;
+  areRoomsLoading: boolean;
   user: User;
 }
 
@@ -42,6 +44,7 @@ const LeftBar = memo<Props>(
     setRoom,
     user,
     setIsMessagesLoading,
+    areRoomsLoading: areRoomsLoading,
     leftBarCurrentWidth,
   }) => {
     const [isCreateNewChatTriggered, setIsCreateNewChatTriggered] =
@@ -49,12 +52,13 @@ const LeftBar = memo<Props>(
     const [roomName, setRoomName] = useState("");
     const [inputError, setInputError] = useState("");
     const [isPublic, setIsPublic] = useState(false);
-    const [isRoomsLoading, setIsRoomsLoading] = useState(true);
+    // const [areRoomsLoading, setareRoomsLoading] = useState(true);
     const [addedRoomId, setAddedRoomId] = useState<ID | null>(null);
     const [filteredUsers, setFilteredUsers] = useState<PrivateRooms>(null);
     const [filteredChats, setFilteredChats] = useState<RoomsType | null>(null);
     const [isFilteredRoomsLoading, setIsFilteredRoomsLoading] = useState(false);
     const [query, setQuery] = useState("");
+    const doesOpponentExists = useRef(false);
 
     useSocketCleanup([
       // rooms
@@ -63,6 +67,7 @@ const LeftBar = memo<Props>(
       "join_room",
       "send_private-room",
       "check_for_existing_opponent_room",
+      "opponent_room_not_exist",
       // groups
       "create_group",
       "group_created",
@@ -211,15 +216,6 @@ const LeftBar = memo<Props>(
       );
     };
 
-    const fetchAllRooms = (roomIds: ID[]) => {
-      socket.emit("get_rooms", roomIds);
-
-      socket.on("rooms_got", (rooms) => {
-        setIsRoomsLoading(false);
-        setRooms(rooms);
-      });
-    };
-
     const handleEndRoomCreation = (room: RoomType) => {
       setRoom(room);
       setIsMessagesLoading(false);
@@ -241,7 +237,21 @@ const LeftBar = memo<Props>(
       if (!currentRoom.opponentRoomId) {
         socket.emit("check_for_existing_opponent_room", currentRoom, user);
 
-        return;
+        await new Promise<void>((resolve) => {
+          socket.on("opponent_room_not_exist", () => {
+            doesOpponentExists.current = false;
+            resolve();
+          });
+
+          socket.on("send_private-room", (newPrivateRoom) => {
+            doesOpponentExists.current = true;
+            handleAddPrivateRoomLocally(newPrivateRoom);
+            setIsMessagesLoading(true);
+            resolve();
+          });
+        });
+
+        if (doesOpponentExists.current) return;
       }
 
       const newLocalRoom = {
@@ -267,7 +277,7 @@ const LeftBar = memo<Props>(
             addedRoomId={addedRoomId}
             roomId={room?.id}
             user={user}
-            isRoomsLoading={isRoomsLoading}
+            areRoomsLoading={areRoomsLoading}
           />
         ) : (
           <p className="ml-5 text-sm">{`Nothing was found in ${roomsType}`}</p>
@@ -279,11 +289,10 @@ const LeftBar = memo<Props>(
         handlePrivateRoomEnter,
         addedRoomId,
         room?.id,
-        isRoomsLoading,
+        areRoomsLoading,
       ],
     );
 
-    // So here we are just entering the new private room created locally
     useEffect(() => {
       if (addedRoomId) {
         const brandNewRoom = rooms.find((room) => room.id === addedRoomId);
@@ -295,23 +304,21 @@ const LeftBar = memo<Props>(
     }, [rooms]);
 
     useEffect(() => {
-      fetchAllRooms(user.rooms);
+      // fetchAllRooms(user.rooms);
+
       socket.on("send_group", handleAddRoomLocally);
       socket.on("group_created", handleEndRoomCreation);
 
       socket.on("send_private-room_to_opponent", (newPrivateRoom) => {
         setRooms((prevRooms) => [newPrivateRoom, ...prevRooms]);
+        setFilteredChats(
+          (prevChats) => prevChats && [...prevChats, newPrivateRoom],
+        );
       });
 
-      socket.on("send_private-room", (newPrivateRoom) => {
-        handleAddPrivateRoomLocally(newPrivateRoom);
-
-        setIsMessagesLoading(true);
-      });
       socket.on("private-room_created", handleEndRoomCreation);
 
       return () => {
-        socket.off("send_private_room");
         socket.off("send_private-room_to_opponent");
 
         socket.off("send_private-room");
@@ -320,7 +327,7 @@ const LeftBar = memo<Props>(
     }, []);
 
     const skeletonRooms: RoomsType = useMemo(() => {
-      return isRoomsLoading
+      return areRoomsLoading
         ? Array.from({ length: 5 }).map(() => {
             return {
               id: uuid() as ID,
@@ -337,9 +344,7 @@ const LeftBar = memo<Props>(
     }, [rooms]);
 
     return (
-      <div
-        className={`flex w-full flex-col gap-5 overflow-y-auto overflow-x-hidden pb-3 pt-3`}
-      >
+      <div className={`flex w-full flex-col gap-5 pb-3 pt-3`}>
         <div className="mx-5 flex flex-col gap-7">
           <Search
             query={query}
@@ -362,13 +367,12 @@ const LeftBar = memo<Props>(
               setIsPublic={setIsPublic}
               handleInputChange={handleInputChange}
               inputError={inputError}
-              isRoomsLoading={isRoomsLoading}
+              areRoomsLoading={areRoomsLoading}
             />
           )}
         </div>
 
         {!!query.length ? (
-          // md:w-96
           <div className="flex flex-col gap-3">
             {["chats", "users"].map((roomType, i) => (
               <div key={i} className="flex flex-col gap-1">
@@ -394,7 +398,7 @@ const LeftBar = memo<Props>(
             addedRoomId={addedRoomId}
             roomId={room?.id}
             user={user}
-            isRoomsLoading={isRoomsLoading}
+            areRoomsLoading={areRoomsLoading}
           />
         )}
       </div>

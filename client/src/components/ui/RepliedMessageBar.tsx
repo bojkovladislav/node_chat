@@ -13,7 +13,7 @@ const RepliedMessageBar: FC<Props> = ({
   isOpponentMessage,
 }) => {
   const colors = {
-    primaryColor: isOpponentMessage ? "slate-600" : "blue-400",
+    primaryColor: isOpponentMessage ? "slate-600" : "blue-600",
     secondaryColor: isOpponentMessage ? "slate-400" : "blue-300",
     messageColor: isOpponentMessage ? "slate-300" : "gray-200",
   } as const;
