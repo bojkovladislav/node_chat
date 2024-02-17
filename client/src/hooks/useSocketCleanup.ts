@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { socket } from "../socket";
+import { socket } from "../adapters/socket";
 
 const useSocketCleanup = (events: string[]) => {
   useEffect(() => {

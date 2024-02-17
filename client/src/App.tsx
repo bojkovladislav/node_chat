@@ -1,22 +1,22 @@
 import { useEffect, useState, memo } from "react";
-import Chat from "./components/Chat.tsx";
-import Auth from "./components/Auth.tsx";
+import { Chat } from "./components/core/Chat";
+import Auth from "./components/core/Auth/Auth.tsx";
 import {
   getItemFromLS,
   removeItemFromLS,
   setItemToLS,
-} from "./helpers/localStorageHelpers.ts";
-import LeftBar from "./components/LeftBar.tsx";
+} from "./utils/localStorage.ts";
+import SideBar from "./components/core/SideBar/SideBar.tsx";
 import { Group, PrivateRoom, RoomType, RoomsType } from "../types/Rooms.ts";
 import { User } from "../types/Users.ts";
-import { socket } from "./socket.ts";
+import { socket } from "./adapters/socket.ts";
 import { useMediaQuery } from "@mantine/hooks";
 import { Messages } from "../types/Messages.ts";
 import useSocketCleanup from "./hooks/useSocketCleanup.ts";
 import { BoxArrowRight } from "react-bootstrap-icons";
 
 import { useResizable } from "react-resizable-layout";
-import SplitterForResize from "./components/ui/SplitterForResize.tsx";
+import { SplitterForResize } from "./components/shared/SplitterForResize";
 import { ID } from "../types/PublicTypes.ts";
 
 function App() {
@@ -168,7 +168,7 @@ function App() {
                 <div className="flex h-full md:rounded-md md:rounded-tl-none md:rounded-tr-none md:border-b-2 md:border-l-2 md:border-r-2 md:border-slate-600">
                   {matches ? (
                     !room ? (
-                      <LeftBar
+                      <SideBar
                         user={user}
                         areRoomsLoading={areRoomsLoading}
                         setRooms={setRooms}
@@ -192,7 +192,7 @@ function App() {
                       <div
                         style={{ width: leftBarCurrentWidth, overflow: "auto" }}
                       >
-                        <LeftBar
+                        <SideBar
                           user={user}
                           leftBarCurrentWidth={leftBarCurrentWidth}
                           setRooms={setRooms}
