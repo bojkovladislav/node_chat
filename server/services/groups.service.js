@@ -42,7 +42,7 @@ const deleteGroupForEveryone = async (userId, groupId) => {
   return crudGroups.delete(groupId);
 };
 
-const updateMembers = (groupId, userId) => {
+const updateMembers = async (groupId, userId) => {
   return crudGroups.update(groupId, {
     members: admin.firestore.FieldValue.arrayUnion(userId),
   });

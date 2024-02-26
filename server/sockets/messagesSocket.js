@@ -7,6 +7,7 @@ import {
   generateNewPrivateRoom,
   generateOpponentRoom,
 } from '../helpers/privateRoomsHelpers.js';
+import { decrypt, encrypt } from '../helpers/encrypionHelpers.js';
 
 function messagesEventHandler(socket) {
   socket.on('create_messages', async (roomId) => {
@@ -19,9 +20,13 @@ function messagesEventHandler(socket) {
 
   socket.on('get_messages', async (roomId) => {
     try {
-      const messages = await messagesService.getMessages(roomId);
+      const encryptedMessages = await messagesService.getMessages(roomId);
+      const decryptedMessages = {
+        ...encryptedMessages,
+        messages: encryptedMessages.messages.map((msg) => decrypt(msg)),
+      };
 
-      socket.emit('messages_got', messages);
+      socket.emit('messages_got', decryptedMessages);
     } catch (error) {
       socket.emit('failed_get_messages', 'Failed to get messages!');
     }
@@ -41,7 +46,10 @@ function messagesEventHandler(socket) {
           repliedMessage: repliedMessage || null,
         };
 
-        socket.emit('send_message', newMessage);
+        const encryptedMessage = encrypt(newMessage);
+        const decryptedMessage = decrypt(encryptedMessage);
+
+        socket.emit('send_message', decryptedMessage);
 
         const isRoomPrivate = room.commonId !== undefined;
         const currentRoomId = isRoomPrivate ? room.commonId : room.id;
@@ -50,12 +58,13 @@ function messagesEventHandler(socket) {
           await handlePrivateRooms(room, author);
         }
 
-        await messagesService.createMessage(currentRoomId, newMessage);
+        await messagesService.createMessage(currentRoomId, encryptedMessage);
 
-        socket.emit('message_created', newMessage);
+        socket.emit('message_created', decryptedMessage);
+        console.log(currentRoomId);
         socket
           .to(currentRoomId)
-          .emit('receive_message', currentRoomId, newMessage);
+          .emit('receive_message', currentRoomId, decryptedMessage);
       } catch (error) {
         socket.emit('failed_create_message', 'Failed to create message!');
       }

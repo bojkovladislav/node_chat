@@ -22,6 +22,7 @@ function handleGroupsEvent(socket) {
         await groupsService.createGroup(userId, newGroup);
 
         socket.emit('group_created', newGroup);
+        
       } catch (error) {
         socket.emit('group_creation_failed', {
           message: 'Failed to create group! Please try again later!',
@@ -62,6 +63,8 @@ function handleGroupsEvent(socket) {
 
   socket.on('update_group_members', async (groupId, userId) => {
     try {
+      socket.to(groupId).emit('send_updated_group_members', userId);
+
       await groupsService.updateMembers(groupId, userId);
     } catch (error) {
       socket.emit('failed_update_members', 'Failed to update group members!');
