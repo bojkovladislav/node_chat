@@ -13,7 +13,9 @@ import { PrivateRoom } from "../PrivateRoom";
 
 interface Props {
   rooms: RoomsType;
-  handleRoomEnter: (currentRoom: any) => void | Promise<void>;
+  handleRoomEnter:
+    | ((currentRoom: PrivateRoomType) => Promise<void>)
+    | ((currentRoom: RoomType) => void);
   handleRoomDelete: (
     roomType: "group" | "private-room",
     e: MouseEvent,

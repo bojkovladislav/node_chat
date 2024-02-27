@@ -1,4 +1,4 @@
-import { useEffect, useState, memo } from "react";
+import { useEffect, useState } from "react";
 import { Chat } from "./components/core/Chat";
 import Auth from "./components/core/Auth/Auth.tsx";
 import {
@@ -12,7 +12,6 @@ import { User } from "../types/Users.ts";
 import { socket } from "./adapters/socket.ts";
 import { useMediaQuery } from "@mantine/hooks";
 import { Messages } from "../types/Messages.ts";
-import useSocketCleanup from "./hooks/useSocketCleanup.ts";
 import { BoxArrowRight } from "react-bootstrap-icons";
 
 import { useResizable } from "react-resizable-layout";
@@ -27,6 +26,7 @@ function App() {
   const matches = useMediaQuery("(max-width: 765px)");
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const [areRoomsLoading, setAreRoomsLoading] = useState(true);
+  const [filteredChats, setFilteredChats] = useState<RoomsType | null>(null);
   const userFromLS: User = getItemFromLS("user");
 
   const {
@@ -39,15 +39,6 @@ function App() {
     min: 315,
     max: 500,
   });
-
-  useSocketCleanup([
-    "create_user",
-    "user_created",
-    "user_exists",
-    "user_creation_failed",
-    "get_user",
-    "failed_get_messages",
-  ]);
 
   const createUser = (name: string) => {
     const updateUserData = (data: User) => {
@@ -137,6 +128,17 @@ function App() {
     if (user) fetchAllRooms(user?.rooms);
   }, [user]);
 
+  useEffect(() => {
+    return () => {
+      socket.off("create_user");
+      socket.off("user_created");
+      socket.off("user_exists");
+      socket.off("user_creation_failed");
+      socket.off("get_user");
+      socket.off("failed_get_messages");
+    };
+  }, [socket]);
+
   return (
     <div
       className={`flex md:pb-10 ${
@@ -176,6 +178,8 @@ function App() {
                         rooms={rooms}
                         room={room}
                         setRoom={setRoom}
+                        filteredChats={filteredChats}
+                        setFilteredChats={setFilteredChats}
                       />
                     ) : (
                       <Chat
@@ -185,12 +189,18 @@ function App() {
                         setMessages={setMessages}
                         room={room}
                         setRoom={setRoom}
+                        setRooms={setRooms}
+                        filteredChats={filteredChats}
+                        setFilteredChats={setFilteredChats}
                       />
                     )
                   ) : (
                     <>
                       <div
-                        style={{ width: leftBarCurrentWidth, overflow: "auto" }}
+                        style={{
+                          width: leftBarCurrentWidth,
+                          overflow: "auto",
+                        }}
                       >
                         <SideBar
                           user={user}
@@ -201,6 +211,8 @@ function App() {
                           room={room}
                           areRoomsLoading={areRoomsLoading}
                           setRoom={setRoom}
+                          filteredChats={filteredChats}
+                          setFilteredChats={setFilteredChats}
                         />
                       </div>
                       <SplitterForResize
@@ -214,6 +226,9 @@ function App() {
                         setMessages={setMessages}
                         room={room}
                         setRoom={setRoom}
+                        setRooms={setRooms}
+                        filteredChats={filteredChats}
+                        setFilteredChats={setFilteredChats}
                       />
                     </>
                   )}
@@ -232,13 +247,19 @@ function App() {
 // TODO:
 
 //? Private room functionality:
-// mobile:
-// fix fetching rooms
-// add interactivity with everything
 
-// encrypt messages
+// Group info modal
+
+// Manage group modal
+
+// Settings for private rooms:
+// create a store
+// add a component & menu list
+
+// mobile:
+// add interactivity with everything
 
 //? FEATURES:
 // Add settings to groups
 
-export default memo(App);
+export default App;

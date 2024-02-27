@@ -19,7 +19,6 @@ import {
   Group,
 } from "../../../../types/Rooms";
 import { ID, SetState, USER_STATUS } from "../../../../types/PublicTypes";
-import useSocketCleanup from "../../../hooks/useSocketCleanup";
 import { AddNewChat } from "../../forms/AddNewChat";
 import { SearchBar } from "../SearchBar";
 import { Rooms } from "../Rooms";
@@ -34,6 +33,8 @@ interface Props {
   leftBarCurrentWidth?: number;
   areRoomsLoading: boolean;
   user: User;
+  filteredChats: RoomsType | null;
+  setFilteredChats: SetState<RoomsType | null>;
 }
 
 const SideBar = memo<Props>(
@@ -46,44 +47,24 @@ const SideBar = memo<Props>(
     setIsMessagesLoading,
     areRoomsLoading: areRoomsLoading,
     leftBarCurrentWidth,
+    filteredChats,
+    setFilteredChats,
   }) => {
     const [isCreateNewChatTriggered, setIsCreateNewChatTriggered] =
       useState(false);
     const [roomName, setRoomName] = useState("");
     const [inputError, setInputError] = useState("");
     const [isPublic, setIsPublic] = useState(false);
-    // const [areRoomsLoading, setareRoomsLoading] = useState(true);
     const [addedRoomId, setAddedRoomId] = useState<ID | null>(null);
     const [filteredUsers, setFilteredUsers] = useState<PrivateRooms>(null);
-    const [filteredChats, setFilteredChats] = useState<RoomsType | null>(null);
     const [isFilteredRoomsLoading, setIsFilteredRoomsLoading] = useState(false);
     const [query, setQuery] = useState("");
     const doesOpponentExists = useRef(false);
 
-    useSocketCleanup([
-      // rooms
-      "get_rooms",
-      "rooms_got",
-      "join_room",
-      "send_private-room",
-      "check_for_existing_opponent_room",
-      "opponent_room_not_exist",
-      // groups
-      "create_group",
-      "group_created",
-      "update_group_members",
-      "failed_update_members",
-      "send_group",
-      "group_creation_failed",
-      "delete_group",
-      "group_deleted",
-      "failed_delete_group",
-      // user
-      "user_update_roomIds",
-    ]);
-
     const handleAddRoomLocally = (room: RoomType) => {
       setAddedRoomId(room.id);
+
+      console.log("local", room);
 
       setRooms((prevRooms) => [room, ...prevRooms]);
     };
@@ -156,7 +137,7 @@ const SideBar = memo<Props>(
         user.id,
       );
 
-      socket.on("group_creation_failed", (message) => console.log(message));
+      socket.on("group_creation_failed", console.log);
 
       setIsCreateNewChatTriggered(false);
       setRoomName("");
@@ -165,6 +146,8 @@ const SideBar = memo<Props>(
 
     const joinRoom = (id: ID | string) => {
       if (!id) return;
+
+      console.log("test");
 
       socket.emit("join_room", id);
     };
@@ -304,10 +287,11 @@ const SideBar = memo<Props>(
     }, [rooms]);
 
     useEffect(() => {
-      // fetchAllRooms(user.rooms);
-
       socket.on("send_group", handleAddRoomLocally);
-      socket.on("group_created", handleEndRoomCreation);
+      socket.on("group_created", (group) => {
+        handleEndRoomCreation(group);
+        joinRoom(group.id);
+      });
 
       socket.on("send_private-room_to_opponent", (newPrivateRoom) => {
         setRooms((prevRooms) => [newPrivateRoom, ...prevRooms]);
@@ -317,14 +301,30 @@ const SideBar = memo<Props>(
       });
 
       socket.on("private-room_created", handleEndRoomCreation);
+    }, []);
 
+    useEffect(() => {
       return () => {
         socket.off("send_private-room_to_opponent");
-
         socket.off("send_private-room");
         socket.off("private-room_created");
+        socket.off("rooms_got");
+        socket.off("get_rooms");
+        socket.off("join_room");
+        socket.off("send_private-room");
+        socket.off("check_for_existing_opponent_room");
+        socket.off("opponent_room_not_exist");
+        socket.off("create_group");
+        socket.off("group_created");
+        socket.off("update_group_members");
+        socket.off("failed_update_members");
+        socket.off("send_group");
+        socket.off("group_creation_failed");
+        socket.off("delete_group");
+        socket.off("group_deleted");
+        socket.off("user_update_roomIds");
       };
-    }, []);
+    }, [socket]);
 
     const skeletonRooms: RoomsType = useMemo(() => {
       return areRoomsLoading
@@ -372,7 +372,7 @@ const SideBar = memo<Props>(
           )}
         </div>
 
-        {!!query.length ? (
+        {query.length ? (
           <div className="flex flex-col gap-3">
             {["chats", "users"].map((roomType, i) => (
               <div key={i} className="flex flex-col gap-1">

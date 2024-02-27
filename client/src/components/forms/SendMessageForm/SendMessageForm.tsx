@@ -15,7 +15,7 @@ import { ID, SetState } from "../../../../types/PublicTypes";
 import { Message, Messages, OperatedMessage } from "../../../../types/Messages";
 import useSocketCleanup from "../../../hooks/useSocketCleanup";
 import { PrivateRoom, RoomType } from "../../../../types/Rooms";
-import { MessageOperationBar } from "../MessageOperationBar";
+import { MessageOperationBar } from "../../core/MessageOperationBar";
 
 interface Props {
   setSentMessageId: SetState<ID | null>;

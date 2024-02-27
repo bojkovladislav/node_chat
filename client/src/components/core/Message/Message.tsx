@@ -116,9 +116,7 @@ const Message: FC<Props> = ({
   };
 
   const handleShowMenu = showContextMenu(contentForMenu(), {
-    style: {
-      backgroundColor: "#0f174a",
-    },
+    style: { backgroundColor: "#0f174a" }, 
   });
 
   return (

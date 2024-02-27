@@ -1,5 +1,5 @@
 import { FC, MouseEvent, ReactNode } from "react";
-import { Group, RoomType } from "../../../../types/Rooms";
+import { Group, PrivateRoom, RoomType } from "../../../../types/Rooms";
 import { Trash } from "react-bootstrap-icons";
 import { Skeleton } from "@mantine/core";
 
@@ -10,7 +10,9 @@ interface Props {
   isRoomsLoading: boolean;
   deleteRoomCondition: boolean;
   currentRoom: RoomType;
-  handleRoomEnter: (currentRoom: RoomType) => void;
+  handleRoomEnter:
+    | ((currentRoom: PrivateRoom) => Promise<void>)
+    | ((currentRoom: RoomType) => void);
   handleRoomDelete: (
     roomType: "group" | "private-room",
     e: MouseEvent,
@@ -33,7 +35,9 @@ const RoomWrapper: FC<Props> = ({
       className={`flex items-center justify-between border-b border-slate-600 p-3 ${
         active && "bg-slate-700"
       } ${isRoomsLoading && "pointer-events-none"}`}
-      onClick={() => deleteRoomCondition && handleRoomEnter(currentRoom)}
+      onClick={() =>
+        deleteRoomCondition && handleRoomEnter(currentRoom as PrivateRoom)
+      }
     >
       {children}
 

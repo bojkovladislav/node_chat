@@ -1,9 +1,13 @@
-const checkType = (item: any) => {
+const checkType = <T>(item: T) => {
   return typeof item !== "string";
 };
 
-export const setItemToLS = (name: string, item: any) => {
-  localStorage.setItem(name, checkType(item) ? JSON.stringify(item) : item);
+export const setItemToLS = <T>(name: string, item: T) => {
+  const normalizedItem: string = checkType(item)
+    ? JSON.stringify(item)
+    : (item as string);
+
+  localStorage.setItem(name, normalizedItem);
 };
 
 export const getItemFromLS = (name: string) => {

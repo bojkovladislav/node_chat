@@ -1,14 +1,19 @@
 import { useEffect, useRef, useState, memo } from "react";
 import { MessageField } from "../MessageField";
-import { SendMessageForm } from "../SendMessageForm";
+import { SendMessageForm } from "../../forms/SendMessageForm";
 import { useMediaQuery } from "@mantine/hooks";
 import { User } from "../../../../types/Users";
 import { Messages, OperatedMessage } from "../../../../types/Messages";
 import { ID, SetState } from "../../../../types/PublicTypes";
-import { Group, RoomType } from "../../../../types/Rooms";
+import { Group, RoomType, RoomsType } from "../../../../types/Rooms";
 import { ArrowLeft } from "react-bootstrap-icons";
 import { NewMessageNotification } from "../NewMessageNotification";
 import { ScrollToBottomArrow } from "../../shared/ScrollToBottomArrow";
+import { socket } from "../../../adapters/socket";
+import { Modal } from "../../shared/Modal";
+import useDisclosureStore from "../../../store/useGroupDisclosureStore";
+import { DeleteGroupForm } from "../../forms/DeleteRoomForm";
+import { GroupSettingsMenu } from "../GroupSettingsMenu";
 
 interface Props {
   messages: Messages | null;
@@ -17,11 +22,24 @@ interface Props {
   user: User;
   room: RoomType | null;
   setRoom: SetState<RoomType | null>;
+  setRooms: SetState<RoomsType>;
+  filteredChats: RoomsType | null;
+  setFilteredChats: SetState<RoomsType | null>;
 }
 
 const Chat = memo<Props>(
-  ({ user, room, setMessages, messages, setRoom, isMessagesLoading }) => {
-    const chatWindowRef = useRef<any>(null);
+  ({
+    user,
+    room,
+    setMessages,
+    messages,
+    setRoom,
+    isMessagesLoading,
+    setRooms,
+    filteredChats,
+    setFilteredChats,
+  }) => {
+    const chatWindowRef = useRef<HTMLDivElement>(null);
     const [sentMessageId, setSentMessageId] = useState<ID | null>(null);
     const matches = useMediaQuery("(max-width: 765px)");
     const [newMessageFromOpponentId, setNewMessageFromOpponentId] =
@@ -38,6 +56,11 @@ const Chat = memo<Props>(
     });
     const isUserNearBottom = useRef<boolean>(false);
     const isOverflowTriggered = useRef<boolean>(false);
+
+    const {
+      isOpened: isDeleteGroupModalOpened,
+      closeDiscloSure: closeDeleteGroupModal,
+    } = useDisclosureStore().deleteGroupItem;
 
     const scrollChatToBottom = (smooth: boolean = false) => {
       if (chatWindowRef.current && !isMessagesLoading) {
@@ -86,6 +109,29 @@ const Chat = memo<Props>(
       }
     }, [newMessageFromOpponentId, isUserNearBottom]);
 
+    useEffect(() => {
+      socket.on("send_updated_group_members", (userId: ID) => {
+        setRoom((prevRoom) => {
+          if (!prevRoom) return prevRoom;
+
+          if ("members" in prevRoom) {
+            const updatedRoom: Group = {
+              ...prevRoom,
+              members: [...prevRoom.members, userId],
+            };
+
+            return updatedRoom;
+          }
+
+          return prevRoom;
+        });
+      });
+
+      return () => {
+        socket.off("send_updated_group_members");
+      };
+    }, []);
+
     return (
       <div
         className={`relative flex h-full w-full flex-col ${
@@ -94,32 +140,37 @@ const Chat = memo<Props>(
       >
         {room ? (
           <>
-            <div className="flex items-center gap-3 border-b-2 border-slate-700 bg-slate-900 p-3">
+            <div className="flex items-center justify-between border-b-2 border-slate-700 bg-slate-900 p-3">
               {/* header of the chat */}
-              {matches && (
-                <ArrowLeft
-                  onClick={() => {
-                    setRoom(null);
-                    setMessages(null);
-                  }}
-                />
-              )}
-              <div className="flex-column gap-5">
-                <h1 className="text-lg">{room?.name}</h1>
-                <p
-                  className={`text-xxs ${
-                    currentTypingUserName ? "text-blue-500" : "text-slate-500"
-                  }`}
-                >
-                  {currentTypingUserName
-                    ? `${currentTypingUserName} is typing...`
-                    : (room as Group)?.members
-                      ? `${(room as Group)?.members.length} member${
-                          (room as Group)?.members.length > 1 ? "s" : ""
-                        }`
-                      : user.status}
-                </p>
+              <div className="flex items-center gap-3">
+                {matches && (
+                  <ArrowLeft
+                    onClick={() => {
+                      setRoom(null);
+                      setMessages(null);
+                    }}
+                  />
+                )}
+                <div className="flex-column gap-5">
+                  <h1 className="text-lg">{room?.name}</h1>
+                  <p
+                    className={`text-xxs ${
+                      currentTypingUserName ? "text-blue-500" : "text-slate-500"
+                    }`}
+                  >
+                    {currentTypingUserName
+                      ? `${currentTypingUserName} is typing...`
+                      : (room as Group)?.members
+                        ? `${(room as Group)?.members.length} member${
+                            (room as Group)?.members.length > 1 ? "s" : ""
+                          }`
+                        : user.status}
+                  </p>
+                </div>
               </div>
+
+              {/* here goes settings */}
+              <GroupSettingsMenu />
             </div>
 
             {/* message field */}
@@ -168,6 +219,24 @@ const Chat = memo<Props>(
           isUserScrollingUp={isUserScrollingUp}
           scrollChatToBottom={scrollChatToBottom}
         />
+
+        <Modal
+          title="Delete Chat"
+          close={closeDeleteGroupModal}
+          opened={isDeleteGroupModalOpened}
+        >
+          <DeleteGroupForm
+            title={room?.name || ""}
+            setRooms={setRooms}
+            roomType={room && (room as Group).members ? "group" : "private-room"}
+            user={user}
+            filteredChats={filteredChats}
+            setFilteredChats={setFilteredChats}
+            currentRoom={room}
+            closeModal={closeDeleteGroupModal}
+            setRoom={setRoom}
+          />
+        </Modal>
       </div>
     );
   },
