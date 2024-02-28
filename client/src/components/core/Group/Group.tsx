@@ -1,7 +1,6 @@
-import { Skeleton } from "@mantine/core";
 import { FC } from "react";
 import { People } from "react-bootstrap-icons";
-import { Avatar } from "../../shared/Avatar";
+import { AvatarWithName } from "../../shared/AvatarWithName";
 
 interface Props {
   loading: boolean;
@@ -10,17 +9,17 @@ interface Props {
   avatar: string;
 }
 
-const Group: FC<Props> = ({ loading, name, isRoomsLoading, avatar }) => {
+const Group: FC<Props> = ({ loading, name, avatar, isRoomsLoading }) => {
   return (
-    <Skeleton
-      visible={isRoomsLoading}
-      id="skeleton-light"
-      className="flex items-center gap-2"
-    >
-      <Avatar avatar={avatar} userName={name} />
-      <People />
-      <p>{loading ? "Creating a group..." : name}</p>
-    </Skeleton>
+    <div className="flex items-center gap-2">
+      <AvatarWithName
+        avatar={avatar}
+        name={name}
+        loadingState={loading || isRoomsLoading}
+      >
+        <People />
+      </AvatarWithName>
+    </div>
   );
 };
 

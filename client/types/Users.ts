@@ -4,7 +4,7 @@ export type User = {
   id: ID;
   name: string;
   rooms: ID[];
-  avatar: string;
+  avatar: string; 
   status: USER_STATUS;
 };
 

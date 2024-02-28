@@ -70,18 +70,18 @@ const DeleteRoomForm: FC<Props> = ({
   }, [socket]);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 px-2">
       <h1>Are you sure you want to delete this room?</h1>
 
       <div className="flex gap-3 self-end">
         <button
-          className="rounded-md border-2 border-transparent bg-white p-1 font-bold text-slate-700 transition-all duration-300 hover:bg-slate-700 hover:text-white"
+          className="rounded-md border-2 border-transparent bg-white p-2 font-bold text-slate-700 transition-all duration-300 hover:bg-slate-700 hover:text-white"
           onClick={closeModal}
         >
           Cancel
         </button>
         <button
-          className="rounded-md border-[1px] border-white bg-transparent p-1 text-red-500 transition-all duration-300 hover:bg-red-500 hover:text-white"
+          className="rounded-md border-[1px] border-white bg-transparent p-2 text-red-500 transition-all duration-300 hover:bg-red-500 hover:text-white"
           onClick={handleRoomDelete}
         >
           Delete {title} room

@@ -336,6 +336,7 @@ const SideBar = memo<Props>(
               opponentUserId: uuid() as ID,
               name: "Fake name",
               creators: [user.id],
+              description: "",
               avatar: "",
               status: USER_STATUS.OFFLINE,
             };

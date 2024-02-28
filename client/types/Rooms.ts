@@ -8,6 +8,7 @@ export type PrivateRoom = {
   status: USER_STATUS;
   name: string;
   creators: ID[];
+  description: string;
 };
 
 export type Group = Omit<

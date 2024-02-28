@@ -1,7 +1,6 @@
-import { Skeleton } from "@mantine/core";
 import { FC } from "react";
-import { Avatar } from "../../shared/Avatar";
 import { PrivateRoom as PrivateRoomType } from "../../../../types/Rooms";
+import { AvatarWithName } from "../../shared/AvatarWithName";
 
 interface Props {
   currentRoom: PrivateRoomType;
@@ -10,18 +9,15 @@ interface Props {
 }
 
 const PrivateRoom: FC<Props> = ({ currentRoom, isRoomsLoading, loading }) => {
+  const { name, status, avatar } = currentRoom;
+
   return (
-    <Skeleton
-      visible={isRoomsLoading}
-      className="flex w-fit items-center gap-2"
-    >
-      <Avatar
-        userName={currentRoom.name}
-        avatar={currentRoom.avatar}
-        status={currentRoom.status}
-      />
-      <p>{loading ? "Creating a room..." : currentRoom.name}</p>
-    </Skeleton>
+    <AvatarWithName
+      avatar={avatar}
+      name={name}
+      status={status}
+      loadingState={loading || isRoomsLoading}
+    />
   );
 };
 

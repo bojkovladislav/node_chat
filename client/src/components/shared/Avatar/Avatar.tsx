@@ -1,15 +1,18 @@
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { USER_STATUS } from "../../../../types/PublicTypes";
 
 interface Props {
-  userName: string;
+  name: string;
   avatar: string;
   status?: USER_STATUS;
+  avatarSize?: number;
 }
 
-const Avatar: FC<Props> = ({ userName, avatar, status }) => {
+const Avatar: FC<Props> = ({ name, avatar, status, avatarSize }) => {
+  const size = useMemo(() => avatarSize || 40, [avatarSize]);
+
   const handleGetLogo = () => {
-    const words = userName.split(" ");
+    const words = name.split(" ");
     const capitalizeFirstLetter = (word: string) =>
       word.charAt(0).toUpperCase();
 
@@ -17,7 +20,7 @@ const Avatar: FC<Props> = ({ userName, avatar, status }) => {
       return words.map(capitalizeFirstLetter).join("").slice(0, 2);
     }
 
-    return capitalizeFirstLetter(userName);
+    return capitalizeFirstLetter(name);
   };
 
   const handleGetStatusColor = () => {
@@ -39,8 +42,13 @@ const Avatar: FC<Props> = ({ userName, avatar, status }) => {
 
   return (
     <div
-      className={`relative flex h-10 w-10 items-center justify-center rounded-full text-center font-semibold`}
-      style={{ backgroundColor: avatar || "transparent" }}
+      className={`relative flex items-center justify-center rounded-full text-center font-semibold`}
+      style={{
+        backgroundColor: avatar || "transparent",
+        height: `${size}px`,
+        width: `${size}px`,
+        fontSize: `${size / 2}px`,
+      }}
     >
       {handleGetLogo()}
       {status && (
@@ -51,7 +59,5 @@ const Avatar: FC<Props> = ({ userName, avatar, status }) => {
     </div>
   );
 };
-
-// add avatar to message document
 
 export default Avatar;

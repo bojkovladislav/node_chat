@@ -54,8 +54,13 @@ const update = (id, field, newValue) => {
   return usersCrud.update(id, { [field]: newValue });
 };
 
+const getUsersByMemberIds = (memberIds) => {
+  return usersCrud.getItemsByUserIds(memberIds);
+};
+
 export const usersServices = {
   createUser,
+  getUsersByMemberIds,
   getUsers,
   getUserById,
   getUserByName,

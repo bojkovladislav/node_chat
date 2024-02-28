@@ -116,7 +116,7 @@ const Message: FC<Props> = ({
   };
 
   const handleShowMenu = showContextMenu(contentForMenu(), {
-    style: { backgroundColor: "#0f174a" }, 
+    style: { backgroundColor: "#0f174a" },
   });
 
   return (
@@ -130,7 +130,7 @@ const Message: FC<Props> = ({
       <div className="flex gap-2">
         {userId !== authorId && (room as Group).members && (
           <Skeleton visible={isMessagesLoading} circle className="h-fit w-fit">
-            <Avatar userName={authorName} avatar={avatar} />
+            <Avatar name={authorName} avatar={avatar} />
           </Skeleton>
         )}
 

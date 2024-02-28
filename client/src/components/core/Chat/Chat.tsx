@@ -11,9 +11,11 @@ import { NewMessageNotification } from "../NewMessageNotification";
 import { ScrollToBottomArrow } from "../../shared/ScrollToBottomArrow";
 import { socket } from "../../../adapters/socket";
 import { Modal } from "../../shared/Modal";
-import useDisclosureStore from "../../../store/useGroupDisclosureStore";
+import useDisclosureStore from "../../../store/useRoomDisclosureStore";
 import { DeleteGroupForm } from "../../forms/DeleteRoomForm";
-import { GroupSettingsMenu } from "../GroupSettingsMenu";
+import { RoomSettingsMenu } from "../RoomSettingsMenu";
+import { handlePlural } from "../../../helpers";
+import { ViewRoomInfo } from "../../forms/ViewRoomInfo";
 
 interface Props {
   messages: Messages | null;
@@ -58,9 +60,14 @@ const Chat = memo<Props>(
     const isOverflowTriggered = useRef<boolean>(false);
 
     const {
-      isOpened: isDeleteGroupModalOpened,
-      closeDiscloSure: closeDeleteGroupModal,
-    } = useDisclosureStore().deleteGroupItem;
+      isOpened: isDeleteRoomModalOpened,
+      closeDiscloSure: closeDeleteRoomModal,
+    } = useDisclosureStore().deleteRoomItem;
+    const {
+      isOpened: isRoomInfoModalOpen,
+      openDiscloSure: openRoomInfoModal,
+      closeDiscloSure: closeRoomInfoModal,
+    } = useDisclosureStore().roomInfoItem;
 
     const scrollChatToBottom = (smooth: boolean = false) => {
       if (chatWindowRef.current && !isMessagesLoading) {
@@ -151,7 +158,10 @@ const Chat = memo<Props>(
                     }}
                   />
                 )}
-                <div className="flex-column gap-5">
+                <div
+                  className="flex-column cursor-pointer gap-5"
+                  onClick={openRoomInfoModal}
+                >
                   <h1 className="text-lg">{room?.name}</h1>
                   <p
                     className={`text-xxs ${
@@ -161,16 +171,19 @@ const Chat = memo<Props>(
                     {currentTypingUserName
                       ? `${currentTypingUserName} is typing...`
                       : (room as Group)?.members
-                        ? `${(room as Group)?.members.length} member${
-                            (room as Group)?.members.length > 1 ? "s" : ""
-                          }`
+                        ? `${(room as Group)?.members
+                            .length} member${handlePlural(
+                            (room as Group)?.members.length,
+                          )}`
                         : user.status}
                   </p>
                 </div>
               </div>
 
               {/* here goes settings */}
-              <GroupSettingsMenu />
+              <RoomSettingsMenu
+                roomType={(room as Group).members ? "group" : "private-room"}
+              />
             </div>
 
             {/* message field */}
@@ -222,20 +235,30 @@ const Chat = memo<Props>(
 
         <Modal
           title="Delete Chat"
-          close={closeDeleteGroupModal}
-          opened={isDeleteGroupModalOpened}
+          close={closeDeleteRoomModal}
+          opened={isDeleteRoomModalOpened}
         >
           <DeleteGroupForm
             title={room?.name || ""}
             setRooms={setRooms}
-            roomType={room && (room as Group).members ? "group" : "private-room"}
+            roomType={
+              room && (room as Group).members ? "group" : "private-room"
+            }
             user={user}
             filteredChats={filteredChats}
             setFilteredChats={setFilteredChats}
             currentRoom={room}
-            closeModal={closeDeleteGroupModal}
+            closeModal={closeDeleteRoomModal}
             setRoom={setRoom}
           />
+        </Modal>
+
+        <Modal
+          title="Group Info"
+          opened={isRoomInfoModalOpen}
+          close={closeRoomInfoModal}
+        >
+          <ViewRoomInfo currentRoom={room as Group} />
         </Modal>
       </div>
     );

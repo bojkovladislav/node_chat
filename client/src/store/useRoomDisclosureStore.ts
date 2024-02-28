@@ -6,7 +6,7 @@ interface useDisclosure {
   closeDiscloSure: () => void;
 }
 
-export type Item = "deleteGroupItem" | "groupInfoItem" | "manageGroupItem";
+export type Item = "deleteRoomItem" | "roomInfoItem" | "manageRoomItem";
 
 type ItemsObj = Record<Item, useDisclosure>;
 
@@ -23,20 +23,20 @@ const closeModal = (set: any, item: Item) => {
 };
 
 const useDisclosureStore: UseBoundStore<StoreApi<ItemsObj>> = create((set) => ({
-  deleteGroupItem: {
+  deleteRoomItem: {
     isOpened: false,
-    openDiscloSure: () => openModal(set, "deleteGroupItem"),
-    closeDiscloSure: () => closeModal(set, "deleteGroupItem"),
+    openDiscloSure: () => openModal(set, "deleteRoomItem"),
+    closeDiscloSure: () => closeModal(set, "deleteRoomItem"),
   },
-  groupInfoItem: {
+  roomInfoItem: {
     isOpened: false,
-    openDiscloSure: () => openModal(set, "groupInfoItem"),
-    closeDiscloSure: () => closeModal(set, "groupInfoItem"),
+    openDiscloSure: () => openModal(set, "roomInfoItem"),
+    closeDiscloSure: () => closeModal(set, "roomInfoItem"),
   },
-  manageGroupItem: {
+  manageRoomItem: {
     isOpened: false,
-    openDiscloSure: () => openModal(set, "manageGroupItem"),
-    closeDiscloSure: () => closeModal(set, "manageGroupItem"),
+    openDiscloSure: () => openModal(set, "manageRoomItem"),
+    closeDiscloSure: () => closeModal(set, "manageRoomItem"),
   },
 }));
 

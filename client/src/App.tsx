@@ -252,9 +252,9 @@ function App() {
 
 // Manage group modal
 
-// Settings for private rooms:
-// create a store
-// add a component & menu list
+// For those who are not the admins of a group just delete it from user's rooms
+
+//! MAKE matches a global state and manage its behavior
 
 // mobile:
 // add interactivity with everything
