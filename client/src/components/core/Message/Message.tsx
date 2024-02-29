@@ -15,6 +15,7 @@ import {
 } from "react-bootstrap-icons";
 import { ID, SetState } from "../../../../types/PublicTypes";
 import { Avatar } from "../../shared/Avatar";
+import { useMediaQuery } from "@mantine/hooks";
 import { useContextMenu } from "mantine-contextmenu";
 import { copyToClipBoard } from "../../../utils/copyToClipBoard";
 import { socket } from "../../../adapters/socket";
@@ -46,6 +47,7 @@ const Message: FC<Props> = ({
   const { showContextMenu } = useContextMenu();
   const { authorName, authorId, content, date, id, avatar } = message;
   const isMyMessage = authorId === userId;
+  const matches = useMediaQuery("(max-width: 765px)");
   const gapClass =
     messages[index].authorId === messages[index + 1]?.authorId
       ? "mb-1"
@@ -123,9 +125,8 @@ const Message: FC<Props> = ({
     <div
       className={`flex w-fit max-w-full flex-col gap-1 md:max-w-md ${gapClass}
       ${isMyMessage ? "self-end" : "self-start"}`}
-      onContextMenu={(e) => {
-        handleShowMenu(e);
-      }}
+      onContextMenu={handleShowMenu}
+      onClick={(e) => matches && handleShowMenu(e)}
     >
       <div className="flex gap-2">
         {userId !== authorId && (room as Group).members && (

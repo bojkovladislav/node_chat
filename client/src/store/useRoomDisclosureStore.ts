@@ -10,33 +10,37 @@ export type Item = "deleteRoomItem" | "roomInfoItem" | "manageRoomItem";
 
 type ItemsObj = Record<Item, useDisclosure>;
 
-const openModal = (set: any, item: Item) => {
-  return set((state: ItemsObj) => ({
-    [item]: { ...state[item], isOpened: true },
-  }));
-};
+enum MODAL_ACTION {
+  OPEN = "open",
+  CLOSE = "close",
+}
 
-const closeModal = (set: any, item: Item) => {
+const operateModal = (set: any, item: Item, action: MODAL_ACTION) => {
   return set((state: ItemsObj) => ({
-    [item]: { ...state[item], isOpened: false },
+    [item]: { ...state[item], isOpened: action === "close" ? false : true },
   }));
 };
 
 const useDisclosureStore: UseBoundStore<StoreApi<ItemsObj>> = create((set) => ({
   deleteRoomItem: {
     isOpened: false,
-    openDiscloSure: () => openModal(set, "deleteRoomItem"),
-    closeDiscloSure: () => closeModal(set, "deleteRoomItem"),
+    openDiscloSure: () =>
+      operateModal(set, "deleteRoomItem", MODAL_ACTION.OPEN),
+    closeDiscloSure: () =>
+      operateModal(set, "deleteRoomItem", MODAL_ACTION.CLOSE),
   },
   roomInfoItem: {
     isOpened: false,
-    openDiscloSure: () => openModal(set, "roomInfoItem"),
-    closeDiscloSure: () => closeModal(set, "roomInfoItem"),
+    openDiscloSure: () => operateModal(set, "roomInfoItem", MODAL_ACTION.OPEN),
+    closeDiscloSure: () =>
+      operateModal(set, "roomInfoItem", MODAL_ACTION.CLOSE),
   },
   manageRoomItem: {
     isOpened: false,
-    openDiscloSure: () => openModal(set, "manageRoomItem"),
-    closeDiscloSure: () => closeModal(set, "manageRoomItem"),
+    openDiscloSure: () =>
+      operateModal(set, "manageRoomItem", MODAL_ACTION.OPEN),
+    closeDiscloSure: () =>
+      operateModal(set, "manageRoomItem", MODAL_ACTION.CLOSE),
   },
 }));
 

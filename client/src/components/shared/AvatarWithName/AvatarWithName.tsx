@@ -7,8 +7,8 @@ interface Props {
   name: string;
   avatar: string;
   status?: USER_STATUS;
-  statusOfMember?: USER_STATUS;
-  loadingState: boolean;
+  additionalInfo?: string;
+  loadingState?: boolean;
   children?: ReactNode;
   avatarSize?: number;
 }
@@ -17,7 +17,7 @@ const AvatarWithName: FC<Props> = ({
   name,
   avatar,
   status,
-  statusOfMember,
+  additionalInfo,
   loadingState,
   children,
   avatarSize,
@@ -25,9 +25,10 @@ const AvatarWithName: FC<Props> = ({
   return (
     <div className="flex items-center gap-2">
       <Skeleton
-        visible={loadingState}
+        visible={loadingState || false}
         circle
-        className={`h-fit w-fit min-w-[${avatarSize || "40px"}]`}
+        className={`h-fit w-fit`}
+        style={{ minWidth: `${avatarSize ? avatarSize : "40"}px` }}
       >
         <Avatar
           name={name}
@@ -39,10 +40,10 @@ const AvatarWithName: FC<Props> = ({
 
       <div>{children}</div>
 
-      <Skeleton visible={loadingState}>
+      <Skeleton visible={loadingState || false}>
         <p>{name}</p>
-        {statusOfMember && (
-          <p className="text-sm text-slate-500">{statusOfMember}</p>
+        {additionalInfo && (
+          <p className="text-sm text-slate-500">{additionalInfo}</p>
         )}
       </Skeleton>
     </div>

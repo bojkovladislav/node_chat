@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, memo } from "react";
 import { MessageField } from "../MessageField";
 import { SendMessageForm } from "../../forms/SendMessageForm";
-import { useMediaQuery } from "@mantine/hooks";
+import { useMediaQuery, useDisclosure } from "@mantine/hooks";
 import { User } from "../../../../types/Users";
 import { Messages, OperatedMessage } from "../../../../types/Messages";
 import { ID, SetState } from "../../../../types/PublicTypes";
@@ -12,10 +12,11 @@ import { ScrollToBottomArrow } from "../../shared/ScrollToBottomArrow";
 import { socket } from "../../../adapters/socket";
 import { Modal } from "../../shared/Modal";
 import useDisclosureStore from "../../../store/useRoomDisclosureStore";
-import { DeleteGroupForm } from "../../forms/DeleteRoomForm";
+import { DeleteGroupForm } from "../DeleteRoomModal";
 import { RoomSettingsMenu } from "../RoomSettingsMenu";
 import { handlePlural } from "../../../helpers";
-import { ViewRoomInfo } from "../../forms/ViewRoomInfo";
+import { ViewRoomInfo } from "../ViewRoomInfoModal";
+import { UserInfo } from "../UserInfo";
 
 interface Props {
   messages: Messages | null;
@@ -68,6 +69,11 @@ const Chat = memo<Props>(
       openDiscloSure: openRoomInfoModal,
       closeDiscloSure: closeRoomInfoModal,
     } = useDisclosureStore().roomInfoItem;
+    const [
+      isUserModalOpened,
+      { open: openRoomUserModal, close: closeRoomUserModal },
+    ] = useDisclosure(false);
+    const [selectedMember, setSelectedMember] = useState<User | null>(null);
 
     const scrollChatToBottom = (smooth: boolean = false) => {
       if (chatWindowRef.current && !isMessagesLoading) {
@@ -102,6 +108,11 @@ const Chat = memo<Props>(
           setIsUserScrollingUp(true);
         }
       }
+    };
+
+    const handleCloseViewRoomInfoModal = () => {
+      closeRoomUserModal();
+      openRoomInfoModal();
     };
 
     useEffect(() => {
@@ -240,6 +251,7 @@ const Chat = memo<Props>(
         >
           <DeleteGroupForm
             title={room?.name || ""}
+            room={room}
             setRooms={setRooms}
             roomType={
               room && (room as Group).members ? "group" : "private-room"
@@ -254,11 +266,27 @@ const Chat = memo<Props>(
         </Modal>
 
         <Modal
-          title="Group Info"
+          title="Room Info"
           opened={isRoomInfoModalOpen}
           close={closeRoomInfoModal}
         >
-          <ViewRoomInfo currentRoom={room as Group} />
+          <ViewRoomInfo
+            currentRoom={room as Group}
+            openRoomUserModal={openRoomUserModal}
+            closeRoomInfoModal={closeRoomInfoModal}
+            isUserModalOpened={isUserModalOpened}
+            setSelectedMember={setSelectedMember}
+          />
+        </Modal>
+
+        <Modal
+          title="User Modal"
+          opened={isUserModalOpened}
+          close={closeRoomUserModal}
+          subModal
+          subModalClose={handleCloseViewRoomInfoModal}
+        >
+          <UserInfo user={selectedMember} />
         </Modal>
       </div>
     );

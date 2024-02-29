@@ -237,7 +237,7 @@ const SideBar = memo<Props>(
         if (doesOpponentExists.current) return;
       }
 
-      const newLocalRoom = {
+      const newLocalRoom: PrivateRoom = {
         ...currentRoom,
         id: uuid() as ID,
         commonId: uuid() as ID,

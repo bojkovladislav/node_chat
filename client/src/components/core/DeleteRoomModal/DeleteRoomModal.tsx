@@ -14,6 +14,7 @@ interface Props {
   title: string;
   closeModal: () => void;
   roomType: "private-room" | "group";
+  room: RoomType | null;
 }
 
 const DeleteRoomForm: FC<Props> = ({
@@ -26,6 +27,7 @@ const DeleteRoomForm: FC<Props> = ({
   filteredChats,
   setFilteredChats,
   user,
+  room,
 }) => {
   const handleDeleteRoomLocally = () => {
     setRooms((rooms) =>
@@ -37,6 +39,8 @@ const DeleteRoomForm: FC<Props> = ({
   };
 
   const handleRoomDelete = () => {
+    if (!room) return;
+
     handleDeleteRoomLocally();
 
     if (roomType === "private-room" && filteredChats) {
@@ -53,11 +57,18 @@ const DeleteRoomForm: FC<Props> = ({
       });
     }
 
-    if (user) {
+    if (room.creators?.includes(user.id)) {
       socket.emit(`delete_${roomType}`, currentRoom, user.id, true);
+
+      socket.on(`failed_delete_${roomType}`, console.log);
+
+      return;
     }
 
-    socket.on(`failed_delete_${roomType}`, console.log);
+    const newRooms = user.rooms.filter((r) => r !== room.id);
+
+    socket.emit("user_update_field", user.id, "rooms", newRooms);
+    socket.on("failed_update_user_field", console.log);
   };
 
   useEffect(() => {
@@ -66,6 +77,7 @@ const DeleteRoomForm: FC<Props> = ({
       socket.off("delete_group");
       socket.off("failed_delete_private-room");
       socket.off("failed_delete_group");
+      socket.off("user_update_field");
     };
   }, [socket]);
 

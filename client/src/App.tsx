@@ -248,13 +248,11 @@ function App() {
 
 //? Private room functionality:
 
-// Group info modal
-
 // Manage group modal
 
-// For those who are not the admins of a group just delete it from user's rooms
+// create a model for a user
 
-//! MAKE matches a global state and manage its behavior
+// encrypt all data
 
 // mobile:
 // add interactivity with everything
