@@ -1,35 +1,36 @@
 import { FC, useEffect, useState, memo } from "react";
-import { User, Users } from "../../../../types/Users";
 import { getGroupMembers } from "../../../adapters/api";
 import { AvatarWithName } from "../../shared/AvatarWithName";
 import { ID, SetState, USER_STATUS } from "../../../../types/PublicTypes";
+import { PrivateRoom, PrivateRooms } from "../../../../types/Rooms";
 
 interface Props {
   memberIds: ID[];
   openRoomUserModal: () => void;
   closeMainModal: () => void;
-  setSelectedMember: SetState<User | null>;
+  setSelectedMember: SetState<PrivateRoom | null>;
 }
 
-const skeletonMembers = [
+const skeletonMembers: PrivateRooms = [
   {
     name: "Bohdan",
     id: "7da96f90-457d-4bbf-8c0d-1072b5d114c5" as ID,
     avatar: "#F87171",
-    rooms: ["9330540d-d355-4393-a47c-8649d9ec81d9"] as ID[],
-    socketId: "SfL0Cny0HI_JNjFCAAAr",
     status: USER_STATUS.ONLINE,
+    creators: ["7da96f90-457d-4bbf-8c0d-1072b5d114c5"],
+    commonId: "7da96f90-457d-4bbf-8c0d-1072asdasdasd",
+    description: "asdasd",
+    opponentRoomId: "ab1f3c44-9c9d-4930-a9f8-18e5bbfb296b",
   },
   {
     name: "Alice",
     id: "ab1f3c44-9c9d-4930-a9f8-18e5bbfb296b" as ID,
     avatar: "#7C3AED",
-    rooms: [
-      "9330540d-d355-4393-a47c-8649d9ec81d9",
-      "a8a9d026-1d95-46db-b044-6ad35e3a72c0",
-    ] as ID[],
-    socketId: "rfL0Cny0HI_JNjFCBCDf",
     status: USER_STATUS.ONLINE,
+    creators: ["ab1f3c44-9c9d-4930-a9f8-18e5bbfb296b"],
+    commonId: "7da96f90-457d-4bbf-8c0d-1072asdasdasd",
+    opponentRoomId: "7da96f90-457d-4bbf-8c0d-1072b5d114c5",
+    description: "asdasas",
   },
 ];
 
@@ -39,7 +40,7 @@ const Members: FC<Props> = ({
   closeMainModal,
   setSelectedMember,
 }) => {
-  const [members, setMembers] = useState<Users>(skeletonMembers);
+  const [members, setMembers] = useState<PrivateRooms>(skeletonMembers);
   const [loading, setLoading] = useState(true);
 
   const handleFetchMembers = async () => {
@@ -49,6 +50,7 @@ const Members: FC<Props> = ({
 
       setMembers(membersFromServer.data.groupMembers);
     } catch (error) {
+      setMembers(null);
       console.log(error);
       throw Error("Failed to fetch members!");
     } finally {
@@ -56,7 +58,9 @@ const Members: FC<Props> = ({
     }
   };
 
-  const handleMemberClick = (member: User) => {
+  const handleMemberClick = (member: PrivateRoom) => {
+    if (loading) return;
+
     openRoomUserModal();
     closeMainModal();
     setSelectedMember(member);

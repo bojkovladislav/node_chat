@@ -3,9 +3,15 @@ import { MessageField } from "../MessageField";
 import { SendMessageForm } from "../../forms/SendMessageForm";
 import { useMediaQuery, useDisclosure } from "@mantine/hooks";
 import { User } from "../../../../types/Users";
+import { v4 as uuid } from "uuid";
 import { Messages, OperatedMessage } from "../../../../types/Messages";
 import { ID, SetState } from "../../../../types/PublicTypes";
-import { Group, RoomType, RoomsType } from "../../../../types/Rooms";
+import {
+  Group,
+  PrivateRoom,
+  RoomType,
+  RoomsType,
+} from "../../../../types/Rooms";
 import { ArrowLeft } from "react-bootstrap-icons";
 import { NewMessageNotification } from "../NewMessageNotification";
 import { ScrollToBottomArrow } from "../../shared/ScrollToBottomArrow";
@@ -21,13 +27,15 @@ import { UserInfo } from "../UserInfo";
 interface Props {
   messages: Messages | null;
   setMessages: SetState<Messages | null>;
-  isMessagesLoading: boolean;
+  areMessagesLoading: boolean;
   user: User;
   room: RoomType | null;
   setRoom: SetState<RoomType | null>;
   setRooms: SetState<RoomsType>;
   filteredChats: RoomsType | null;
   setFilteredChats: SetState<RoomsType | null>;
+  setAreMessagesLoading: SetState<boolean>;
+  rooms: RoomsType;
 }
 
 const Chat = memo<Props>(
@@ -37,10 +45,12 @@ const Chat = memo<Props>(
     setMessages,
     messages,
     setRoom,
-    isMessagesLoading,
+    areMessagesLoading: isMessagesLoading,
     setRooms,
     filteredChats,
     setFilteredChats,
+    setAreMessagesLoading,
+    rooms,
   }) => {
     const chatWindowRef = useRef<HTMLDivElement>(null);
     const [sentMessageId, setSentMessageId] = useState<ID | null>(null);
@@ -73,7 +83,9 @@ const Chat = memo<Props>(
       isUserModalOpened,
       { open: openRoomUserModal, close: closeRoomUserModal },
     ] = useDisclosure(false);
-    const [selectedMember, setSelectedMember] = useState<User | null>(null);
+    const [selectedMember, setSelectedMember] = useState<PrivateRoom | null>(
+      null,
+    );
 
     const scrollChatToBottom = (smooth: boolean = false) => {
       if (chatWindowRef.current && !isMessagesLoading) {
@@ -115,6 +127,50 @@ const Chat = memo<Props>(
       openRoomInfoModal();
     };
 
+    const handleSendDirectMessage = async (member: PrivateRoom) => {
+      closeRoomUserModal();
+
+      const foundRoom = rooms.find((room) => room.name === member.name);
+
+      if (foundRoom) {
+        setRoom(foundRoom);
+
+        return;
+      }
+
+      let doesOpponentExist = false;
+
+      if (!member.opponentRoomId) {
+        socket.emit("check_for_existing_opponent_room", member, user);
+
+        await new Promise<void>((resolve) => {
+          socket.on("opponent_room_not_exist", () => {
+            doesOpponentExist = false;
+            resolve();
+          });
+
+          socket.on("send_private-room", (newPrivateRoom) => {
+            setRooms((prevRooms) => [newPrivateRoom, ...prevRooms]);
+            setAreMessagesLoading(true);
+            resolve();
+          });
+        });
+
+        if (doesOpponentExist) return;
+      }
+
+      const newLocalRoom: PrivateRoom = {
+        ...member,
+        id: uuid() as ID,
+        commonId: uuid() as ID,
+        creators: [user.id, member.id],
+      };
+
+      setRooms((prevRooms) => [newLocalRoom, ...prevRooms]);
+      setRoom(newLocalRoom);
+      setAreMessagesLoading(false);
+    };
+
     useEffect(() => {
       scrollChatToBottom();
     }, [isMessagesLoading, sentMessageId]);
@@ -144,11 +200,16 @@ const Chat = memo<Props>(
           return prevRoom;
         });
       });
+    }, []);
 
+    useEffect(() => {
       return () => {
         socket.off("send_updated_group_members");
+        socket.off("check_for_existing_opponent_room");
+        socket.off("opponent_room_not_exist");
+        socket.off("send_private-room");
       };
-    }, []);
+    }, [socket]);
 
     return (
       <div
@@ -286,7 +347,11 @@ const Chat = memo<Props>(
           subModal
           subModalClose={handleCloseViewRoomInfoModal}
         >
-          <UserInfo user={selectedMember} />
+          <UserInfo
+            user={user}
+            currentUser={selectedMember}
+            handleSendDirectMessage={handleSendDirectMessage}
+          />
         </Modal>
       </div>
     );

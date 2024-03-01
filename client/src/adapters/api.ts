@@ -31,7 +31,9 @@ export const getFilteredChats = (
   });
 };
 
-export const getGroupMembers = (memberIds: ID[]): Promise<Data<Users>> => {
+export const getGroupMembers = (
+  memberIds: ID[],
+): Promise<Data<PrivateRooms>> => {
   return axios.post(`${BASE_URL}/users`, {
     memberIds,
   });

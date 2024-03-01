@@ -4,7 +4,6 @@ import { handlePlural } from "../../../helpers";
 import { Members } from "../../shared/Members";
 import { useMediaQuery } from "@mantine/hooks";
 import { AvatarWithName } from "../../shared/AvatarWithName";
-import { User } from "../../../../types/Users";
 import { SetState } from "../../../../types/PublicTypes";
 
 interface Props {
@@ -12,7 +11,7 @@ interface Props {
   openRoomUserModal: () => void;
   closeRoomInfoModal: () => void;
   isUserModalOpened: boolean;
-  setSelectedMember: SetState<User | null>;
+  setSelectedMember: SetState<PrivateRoom | null>;
 }
 
 const ViewRoomInfo: FC<Props> = ({

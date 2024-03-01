@@ -54,8 +54,20 @@ const update = (id, field, newValue) => {
   return usersCrud.update(id, { [field]: newValue });
 };
 
-const getUsersByMemberIds = (memberIds) => {
-  return usersCrud.getItemsByUserIds(memberIds);
+const getUsersByMemberIds = async (memberIds) => {
+  const users = await usersCrud.getItemsByUserIds(memberIds);
+
+  const usersConvertedToPrivateRooms = users.map(
+    ({ name, id, avatar, status }) => ({
+      name,
+      id,
+      creators: [id],
+      avatar,
+      status,
+    })
+  );
+
+  return usersConvertedToPrivateRooms;
 };
 
 export const usersServices = {

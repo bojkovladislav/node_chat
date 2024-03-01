@@ -24,7 +24,7 @@ function App() {
   const [room, setRoom] = useState<RoomType | null>(null);
   const [messages, setMessages] = useState<Messages | null>(null);
   const matches = useMediaQuery("(max-width: 765px)");
-  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
+  const [areMessagesLoading, setAreMessagesLoading] = useState(false);
   const [areRoomsLoading, setAreRoomsLoading] = useState(true);
   const [filteredChats, setFilteredChats] = useState<RoomsType | null>(null);
   const userFromLS: User = getItemFromLS("user");
@@ -81,7 +81,7 @@ function App() {
       );
 
       socket.on("messages_got", (messages) => {
-        setIsMessagesLoading(false);
+        setAreMessagesLoading(false);
         setMessages(messages);
       });
     }
@@ -115,7 +115,7 @@ function App() {
     loadMessages();
 
     socket.on("failed_get_messages", () => {
-      setIsMessagesLoading(false);
+      setAreMessagesLoading(false);
       setMessages(null);
     });
 
@@ -174,7 +174,7 @@ function App() {
                         user={user}
                         areRoomsLoading={areRoomsLoading}
                         setRooms={setRooms}
-                        setIsMessagesLoading={setIsMessagesLoading}
+                        setIsMessagesLoading={setAreMessagesLoading}
                         rooms={rooms}
                         room={room}
                         setRoom={setRoom}
@@ -185,13 +185,15 @@ function App() {
                       <Chat
                         user={user}
                         messages={messages}
-                        isMessagesLoading={isMessagesLoading}
+                        areMessagesLoading={areMessagesLoading}
                         setMessages={setMessages}
                         room={room}
                         setRoom={setRoom}
                         setRooms={setRooms}
                         filteredChats={filteredChats}
                         setFilteredChats={setFilteredChats}
+                        setAreMessagesLoading={setAreMessagesLoading}
+                        rooms={rooms}
                       />
                     )
                   ) : (
@@ -206,7 +208,7 @@ function App() {
                           user={user}
                           leftBarCurrentWidth={leftBarCurrentWidth}
                           setRooms={setRooms}
-                          setIsMessagesLoading={setIsMessagesLoading}
+                          setIsMessagesLoading={setAreMessagesLoading}
                           rooms={rooms}
                           room={room}
                           areRoomsLoading={areRoomsLoading}
@@ -222,13 +224,15 @@ function App() {
                       <Chat
                         user={user}
                         messages={messages}
-                        isMessagesLoading={isMessagesLoading}
+                        areMessagesLoading={areMessagesLoading}
                         setMessages={setMessages}
                         room={room}
                         setRoom={setRoom}
                         setRooms={setRooms}
                         filteredChats={filteredChats}
                         setFilteredChats={setFilteredChats}
+                        setAreMessagesLoading={setAreMessagesLoading}
+                        rooms={rooms}
                       />
                     </>
                   )}
@@ -249,8 +253,6 @@ function App() {
 //? Private room functionality:
 
 // Manage group modal
-
-// create a model for a user
 
 // encrypt all data
 

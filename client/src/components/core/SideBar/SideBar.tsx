@@ -59,12 +59,10 @@ const SideBar = memo<Props>(
     const [filteredUsers, setFilteredUsers] = useState<PrivateRooms>(null);
     const [isFilteredRoomsLoading, setIsFilteredRoomsLoading] = useState(false);
     const [query, setQuery] = useState("");
-    const doesOpponentExists = useRef(false);
+    const doesOpponentExist = useRef(false);
 
     const handleAddRoomLocally = (room: RoomType) => {
       setAddedRoomId(room.id);
-
-      console.log("local", room);
 
       setRooms((prevRooms) => [room, ...prevRooms]);
     };
@@ -147,8 +145,6 @@ const SideBar = memo<Props>(
     const joinRoom = (id: ID | string) => {
       if (!id) return;
 
-      console.log("test");
-
       socket.emit("join_room", id);
     };
 
@@ -222,19 +218,19 @@ const SideBar = memo<Props>(
 
         await new Promise<void>((resolve) => {
           socket.on("opponent_room_not_exist", () => {
-            doesOpponentExists.current = false;
+            doesOpponentExist.current = false;
             resolve();
           });
 
           socket.on("send_private-room", (newPrivateRoom) => {
-            doesOpponentExists.current = true;
+            doesOpponentExist.current = true;
             handleAddPrivateRoomLocally(newPrivateRoom);
             setIsMessagesLoading(true);
             resolve();
           });
         });
 
-        if (doesOpponentExists.current) return;
+        if (doesOpponentExist.current) return;
       }
 
       const newLocalRoom: PrivateRoom = {
