@@ -1,8 +1,9 @@
 import { SetState } from "../../../../types/PublicTypes";
 import { RoomType, RoomsType } from "../../../../types/Rooms";
-import { FC, useEffect } from "react";
+import { FC, useEffect, useState } from "react";
 import { User } from "../../../../types/Users";
 import { socket } from "../../../adapters/socket";
+import { ModalButton } from "../../shared/ModalButton";
 
 interface Props {
   setRooms: SetState<RoomsType>;
@@ -29,6 +30,8 @@ const DeleteRoomForm: FC<Props> = ({
   user,
   room,
 }) => {
+  const [deleteForEveryone, setDeleteForEveryone] = useState(false);
+
   const handleDeleteRoomLocally = () => {
     setRooms((rooms) =>
       rooms.filter((room: RoomType) => room.id !== currentRoom?.id),
@@ -57,18 +60,9 @@ const DeleteRoomForm: FC<Props> = ({
       });
     }
 
-    if (room.creators?.includes(user.id)) {
-      socket.emit(`delete_${roomType}`, currentRoom, user.id, true);
+    socket.emit(`delete_${roomType}`, currentRoom, user.id, deleteForEveryone);
 
-      socket.on(`failed_delete_${roomType}`, console.log);
-
-      return;
-    }
-
-    const newRooms = user.rooms.filter((r) => r !== room.id);
-
-    socket.emit("user_update_field", user.id, "rooms", newRooms);
-    socket.on("failed_update_user_field", console.log);
+    socket.on(`failed_delete_${roomType}`, console.log);
   };
 
   useEffect(() => {
@@ -77,27 +71,33 @@ const DeleteRoomForm: FC<Props> = ({
       socket.off("delete_group");
       socket.off("failed_delete_private-room");
       socket.off("failed_delete_group");
-      socket.off("user_update_field");
     };
-  }, [socket]);
+  }, []);
 
   return (
     <div className="flex flex-col gap-5 px-2">
       <h1>Are you sure you want to delete this room?</h1>
 
+      {room?.creators?.includes(user.id) && (
+        <label htmlFor="deleteForEveryone" className="flex w-fit gap-2">
+          Delete for everyone
+          <input
+            type="checkbox"
+            id="deleteForEveryone"
+            name="deleteForEveryone"
+            checked={deleteForEveryone}
+            onChange={() => setDeleteForEveryone((prevState) => !prevState)}
+          />
+        </label>
+      )}
+
       <div className="flex gap-3 self-end">
-        <button
-          className="rounded-md border-2 border-transparent bg-white p-2 font-bold text-slate-700 transition-all duration-300 hover:bg-slate-700 hover:text-white"
-          onClick={closeModal}
-        >
-          Cancel
-        </button>
-        <button
-          className="rounded-md border-[1px] border-white bg-transparent p-2 text-red-500 transition-all duration-300 hover:bg-red-500 hover:text-white"
+        <ModalButton title="Cancel" onClick={closeModal} />
+        <ModalButton
+          title={`Delete ${title} room`}
+          danger
           onClick={handleRoomDelete}
-        >
-          Delete {title} room
-        </button>
+        />
       </div>
     </div>
   );

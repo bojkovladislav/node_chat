@@ -64,7 +64,7 @@ function messagesEventHandler(socket) {
         console.log(currentRoomId);
         socket
           .to(currentRoomId)
-          .emit('receive_message', currentRoomId, decryptedMessage);
+          .emit('receive_message', decryptedMessage);
       } catch (error) {
         socket.emit('failed_create_message', 'Failed to create message!');
       }

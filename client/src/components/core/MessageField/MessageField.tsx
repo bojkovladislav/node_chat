@@ -37,7 +37,7 @@ const MessageField: FC<Props> = ({
   setOperatedMessage,
   room,
 }) => {
-  const handleReceiveMessage = (roomId: ID, newMessage: MessageType) => {
+  const handleReceiveMessage = (newMessage: MessageType) => {
     setMessages((prevMessages) => {
       if (!prevMessages) return prevMessages; // || prevMessages.roomId !== roomId not sure
 
@@ -51,8 +51,8 @@ const MessageField: FC<Props> = ({
   };
 
   useEffect(() => {
-    socket.on("receive_message", (roomId, newMessage) => {
-      handleReceiveMessage(roomId, newMessage);
+    socket.on("receive_message", (newMessage) => {
+      handleReceiveMessage(newMessage);
     });
 
     socket.on("receive_deleted_message-id", (messageId) => {
@@ -110,6 +110,7 @@ const MessageField: FC<Props> = ({
 
       debouncedResetUserName.cancel();
     };
+    // eslint-disable-next-line
   }, []);
 
   const messagesData: MessageType[] = useMemo(
@@ -126,6 +127,7 @@ const MessageField: FC<Props> = ({
             };
           }) as MessageType[])
         : (messages?.messages as MessageType[]),
+        // eslint-disable-next-line
     [isMessagesLoading, messages],
   );
 

@@ -16,6 +16,7 @@ const getFilteredRooms = async (req, res) => {
   });
 };
 
+
 export const privateRoomsController = {
   getFilteredRooms,
 };

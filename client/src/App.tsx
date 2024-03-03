@@ -109,7 +109,19 @@ function App() {
     if (userFromLS) updateUser();
 
     setAreRoomsLoading(true);
+
+    return () => {
+      socket.off("create_user");
+      socket.off("user_created");
+      socket.off("user_exists");
+      socket.off("user_creation_failed");
+      socket.off("get_user");
+      socket.off("failed_get_messages");
+    };
+    // eslint-disable-next-line
   }, []);
+
+  console.log(user);
 
   useEffect(() => {
     loadMessages();
@@ -122,22 +134,12 @@ function App() {
     return () => {
       socket.off("failed_get_messages");
     };
+    // eslint-disable-next-line
   }, [room]);
 
   useEffect(() => {
     if (user) fetchAllRooms(user?.rooms);
   }, [user]);
-
-  useEffect(() => {
-    return () => {
-      socket.off("create_user");
-      socket.off("user_created");
-      socket.off("user_exists");
-      socket.off("user_creation_failed");
-      socket.off("get_user");
-      socket.off("failed_get_messages");
-    };
-  }, [socket]);
 
   return (
     <div
@@ -206,7 +208,6 @@ function App() {
                       >
                         <SideBar
                           user={user}
-                          leftBarCurrentWidth={leftBarCurrentWidth}
                           setRooms={setRooms}
                           setIsMessagesLoading={setAreMessagesLoading}
                           rooms={rooms}
@@ -249,17 +250,6 @@ function App() {
 }
 
 // TODO:
-
-//? Private room functionality:
-
 // Manage group modal
-
-// encrypt all data
-
-// mobile:
-// add interactivity with everything
-
-//? FEATURES:
-// Add settings to groups
 
 export default App;

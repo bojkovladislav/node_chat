@@ -9,3 +9,4 @@ export const usersRouter = express.Router();
 // usersRouter.get(`/:id`, catchError(usersController.getUserById));
 
 usersRouter.post('/', catchError(usersController.getUsersByMemberIds));
+usersRouter.post('/friends', catchError(usersController.getFriends));

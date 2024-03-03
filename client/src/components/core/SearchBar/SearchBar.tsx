@@ -61,7 +61,8 @@ const SearchBar: FC<Props> = ({
     return () => {
       debouncedGetRooms.cancel();
     };
-  }, [query.trim()]);
+    // eslint-disable-next-line
+  }, [query]);
 
   return (
     <div className="flex items-center gap-3 rounded-md border-transparent bg-slate-600 pl-2">

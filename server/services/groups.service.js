@@ -32,6 +32,8 @@ const deleteGroupForSelf = async (userId, groupId) => {
 
   if (!user) return 'user does not exist!';
 
+  await removeMember(groupId, userId);
+
   return usersServices.removeRoomId(userId, groupId);
 };
 
@@ -42,9 +44,15 @@ const deleteGroupForEveryone = async (userId, groupId) => {
   return crudGroups.delete(groupId);
 };
 
-const updateMembers = async (groupId, userId) => {
+const addMember = async (groupId, userId) => {
   return crudGroups.update(groupId, {
     members: admin.firestore.FieldValue.arrayUnion(userId),
+  });
+};
+
+const removeMember = async (groupId, userId) => {
+  return crudGroups.update(groupId, {
+    members: admin.firestore.FieldValue.arrayRemove(userId),
   });
 };
 
@@ -54,5 +62,6 @@ export const groupsService = {
   getGroup,
   deleteGroupForEveryone,
   deleteGroupForSelf,
-  updateMembers,
+  updateMembers: addMember,
+  removeMember,
 };

@@ -1,10 +1,17 @@
-import { FC, useMemo } from "react";
-import { Group, PrivateRoom, RoomType } from "../../../../types/Rooms";
+import { FC, useEffect, useMemo, useState } from "react";
+import {
+  Group,
+  PrivateRoom,
+  PrivateRooms,
+  RoomType,
+} from "../../../../types/Rooms";
 import { handlePlural } from "../../../helpers";
 import { Members } from "../../shared/Members";
 import { useMediaQuery } from "@mantine/hooks";
 import { AvatarWithName } from "../../shared/AvatarWithName";
 import { SetState } from "../../../../types/PublicTypes";
+import { getGroupMembers } from "../../../adapters/api";
+import useSkeletonRooms from "../../../hooks/useSkeletonRooms";
 
 interface Props {
   currentRoom: RoomType;
@@ -30,6 +37,36 @@ const ViewRoomInfo: FC<Props> = ({
       () => `${memberIds.length} member${handlePlural(memberIds.length)}`,
       [memberIds],
     );
+  const [members, setMembers] = useState<PrivateRooms>([]);
+  const [loading, setLoading] = useState(true);
+  const skeletonMembers = useSkeletonRooms(memberIds.length, [memberIds]);
+
+  const handleFetchMembers = async () => {
+    try {
+      setLoading(true);
+      const membersFromServer = await getGroupMembers(memberIds);
+
+      setMembers(membersFromServer.data.groupMembers);
+    } catch (error) {
+      setMembers(null);
+      console.log(error);
+      throw Error("Failed to fetch members!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMemberClick = (member: PrivateRoom) => {
+    if (loading) return;
+
+    openRoomUserModal();
+    closeRoomInfoModal();
+    setSelectedMember(member);
+  };
+
+  useEffect(() => {
+    if (memberIds) handleFetchMembers();
+  }, [memberIds]);
 
   return (
     <div
@@ -59,10 +96,10 @@ const ViewRoomInfo: FC<Props> = ({
           </h1>
 
           <Members
-            closeMainModal={closeRoomInfoModal}
-            memberIds={memberIds}
-            openRoomUserModal={openRoomUserModal}
-            setSelectedMember={setSelectedMember}
+            handleMemberClick={handleMemberClick}
+            loading={loading}
+            members={members}
+            skeletonMembers={skeletonMembers}
           />
         </div>
       )}

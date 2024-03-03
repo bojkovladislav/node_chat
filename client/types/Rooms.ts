@@ -25,3 +25,8 @@ export type PrivateRooms = PrivateRoom[] | null;
 export type RoomType = PrivateRoom | Group;
 
 export type RoomsType = RoomType[];
+
+export type AddedGroupInfo = {
+  name: string,
+  members: PrivateRooms,
+}

@@ -15,7 +15,9 @@ enum MODAL_ACTION {
   CLOSE = "close",
 }
 
-const operateModal = (set: any, item: Item, action: MODAL_ACTION) => {
+type SetFunction<T> = (partial: Partial<T> | ((state: T) => T | Partial<T>), replace?: boolean) => void;
+
+const operateModal = (set: SetFunction<ItemsObj>, item: Item, action: MODAL_ACTION) => {
   return set((state: ItemsObj) => ({
     [item]: { ...state[item], isOpened: action === "close" ? false : true },
   }));

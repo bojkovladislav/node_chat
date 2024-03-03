@@ -5,6 +5,7 @@ const SplitterForResize = ({
   dir,
   isDragging,
   ...props
+  // eslint-disable-next-line
 }: any) => {
   const [isFocused, setIsFocused] = useState(false);
 

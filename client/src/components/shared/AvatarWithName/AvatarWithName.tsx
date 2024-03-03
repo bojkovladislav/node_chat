@@ -2,6 +2,7 @@ import { Avatar } from "../../shared/Avatar";
 import { FC, ReactNode } from "react";
 import { USER_STATUS } from "../../../../types/PublicTypes";
 import { Skeleton } from "@mantine/core";
+import { Selected } from "../Selected";
 
 interface Props {
   name: string;
@@ -11,6 +12,7 @@ interface Props {
   loadingState?: boolean;
   children?: ReactNode;
   avatarSize?: number;
+  selected?: boolean;
 }
 
 const AvatarWithName: FC<Props> = ({
@@ -21,27 +23,35 @@ const AvatarWithName: FC<Props> = ({
   loadingState,
   children,
   avatarSize,
+  selected,
 }) => {
   return (
     <div className="flex items-center gap-2">
       <Skeleton
-        visible={loadingState || false}
+        visible={!!loadingState}
         circle
-        className={`h-fit w-fit`}
-        style={{ minWidth: `${avatarSize ? avatarSize : "40"}px` }}
+        className="h-fit w-fit"
+        style={{ minWidth: `${avatarSize ? avatarSize : "43"}px` }}
       >
-        <Avatar
-          name={name}
-          avatar={avatar}
-          status={status}
-          avatarSize={avatarSize}
-        />
+        <Selected selected={!!selected} avatarSize={avatarSize}>
+          <Avatar
+            name={name}
+            avatar={avatar}
+            status={status}
+            avatarSize={avatarSize}
+          />
+        </Selected>
       </Skeleton>
 
       <div>{children}</div>
 
-      <Skeleton visible={loadingState || false}>
-        <p>{name}</p>
+      <Skeleton visible={!!loadingState}>
+        <p
+          className="transition-colors duration-300"
+          style={{ color: selected ? "#3B82F6" : "#FFFFFF" }}
+        >
+          {name}
+        </p>
         {additionalInfo && (
           <p className="text-sm text-slate-500">{additionalInfo}</p>
         )}

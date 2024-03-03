@@ -9,6 +9,7 @@ interface Props {
   close: () => void;
   subModal?: boolean;
   subModalClose?: () => void;
+  isFormSubmitted?: boolean;
 }
 
 const Modal: FC<Props> = ({
@@ -18,9 +19,22 @@ const Modal: FC<Props> = ({
   opened,
   subModal,
   subModalClose,
+  isFormSubmitted,
 }) => {
   return (
-    <ModalUI.Root opened={opened} onClose={close} centered size="auto">
+    <ModalUI.Root
+      opened={opened}
+      onClose={close}
+      centered
+      size="auto"
+      trapFocus={false}
+      returnFocus={false}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          !isFormSubmitted && e.preventDefault();
+        }
+      }}
+    >
       <ModalUI.Overlay
         backgroundOpacity={0.3}
         blur={3}

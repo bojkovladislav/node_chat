@@ -13,7 +13,6 @@ import { socket } from "../../../adapters/socket";
 import { User } from "../../../../types/Users";
 import { ID, SetState } from "../../../../types/PublicTypes";
 import { Message, Messages, OperatedMessage } from "../../../../types/Messages";
-import useSocketCleanup from "../../../hooks/useSocketCleanup";
 import { PrivateRoom, RoomType } from "../../../../types/Rooms";
 import { MessageOperationBar } from "../../core/MessageOperationBar";
 
@@ -40,12 +39,6 @@ const SendMessageForm: FC<Props> = memo(
     const [isEmojiClicked, setIsEmojiClicked] = useState(false);
     const [message, setMessage] = useState("");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-    useSocketCleanup([
-      "message_created",
-      "send_message",
-      "create_message",
-      "typing_trigger",
-    ]);
 
     const getDate = () => {
       const currentDate = new Date(Date.now());
@@ -164,6 +157,13 @@ const SendMessageForm: FC<Props> = memo(
       socket.on("message_created", () => {
         setSentMessageId(null);
       });
+      return () => {
+        socket.off("message_created");
+        socket.off("send_message");
+        socket.off("create_message");
+        socket.off("typing_trigger");
+      };
+      // eslint-disable-next-line
     }, []);
 
     useEffect(() => {
@@ -172,6 +172,8 @@ const SendMessageForm: FC<Props> = memo(
       if (operatedMessage.edited && operatedMessage.message) {
         setMessage(operatedMessage.message.content.trim());
       }
+
+      // eslint-disable-next-line
     }, [operatedMessage.message]);
 
     return (
